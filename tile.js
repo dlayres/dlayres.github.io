@@ -1,14 +1,19 @@
 class Tile{
-  constructor(letter){
+  constructor(letter, x, y){
     this.width = 40;
     this.letter = letter;
+    this.x = x;
+    this.y = y;
+    this.onBoard = false;
+    this.boardX = 0;
+    this.boardY = 0;
   }
 
-  drawTile(x, y){
+  drawTile(){
     fill(255, 0, 0);
-    square(x, y, this.width);
+    square(this.x, this.y, this.width);
     fill(255, 255, 255);
     textSize(this.width / 1.25);
-    text(this.letter, x + this.width / 4, y + this.width / 1.25);
+    text(this.letter, this.x + this.width / 4, this.y + this.width / 1.25);
   }
 }

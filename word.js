@@ -11,6 +11,11 @@ let scrollFactor;
 let userTiles;
 let tilePossibilities;
 let canDrag = true;
+let draggingTile = false;
+let draggingTileIndex;
+let dragOffsetX;
+let dragOffsetY;
+let tileRestingPositions;
 
 function preload(){
   dictionaryHalf1 = loadStrings("https://gist.githubusercontent.com/dlayres/5919e00889614b854092b86d76d55815/raw/6025c962aaa62766140a9ea0bfadba9dd4d07e61/dictHalf1.txt");
@@ -23,8 +28,10 @@ function setup(){
   submitWordButton = createButton("Submit Word");
   submitWordButton.position(20, windowHeight - 30);
   userPos = createVector(0, 0);
-  gridSpacing = 100;
+  gridSpacing = 40;
   scrollFactor = 0.015;
+
+  tileRestingPositions = [];
 
   // Tile letter distribution, blanks not yet implemented
   tilePossibilities = ["A", "A", "A", "A", "A", "A", "A", "A", "A", "B", "B", "C", "C", "D", "D", "D", "D", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E",
@@ -34,7 +41,9 @@ function setup(){
 
   userTiles = [];
   for(let i = 0; i < 7; i++){
-    userTiles.push(new Tile(tilePossibilities[Math.floor(Math.random() * tilePossibilities.length)]));
+    tileRestingPositions.push(createVector(100 * (i + 2), windowHeight - 45));
+    let tileLetter = tilePossibilities[Math.floor(Math.random() * tilePossibilities.length)];
+    userTiles.push(new Tile(tileLetter, tileRestingPositions[i].x, tileRestingPositions[i].y));
   }
 }
 
@@ -43,8 +52,18 @@ function draw(){
   drawGrid(userPos);
   strokeWeight(2);
   rect(0, windowHeight - 50, windowWidth, windowHeight - 50);
+  circle(userPos.x, userPos.y, 10);
+
+  if(draggingTile){
+    userTiles[draggingTileIndex].x = mouseX - dragOffsetX;
+    userTiles[draggingTileIndex].y = mouseY - dragOffsetY;
+  }
+
   for(let i = 0; i < userTiles.length; i++){
-    userTiles[i].drawTile(100 * (i + 2), windowHeight - 45);
+    userTiles[i].drawTile();
+  }
+  if(draggingTile){
+    userTiles[draggingTileIndex].drawTile();
   }
 }
 
@@ -53,11 +72,14 @@ function windowResized(){
   submitWordButton.position(20, windowHeight - 30);
 }
 
+// Scrolling disabled until I figure out how to put tiles on a different-sized grid that looks good
+/*
 function mouseWheel(event){
   scrollChange = event.delta * scrollFactor * gridSpacing * scrollFactor;
   gridSpacing -= scrollChange;
   gridSpacing = constrain(gridSpacing, 20, 200);
 }
+*/
 
 function mouseDragged(event){
   if(canDrag){
@@ -69,10 +91,30 @@ function mousePressed(){
   if(mouseY > windowHeight - 50){
     canDrag = false;
   }
+  for(let i = 0; i < userTiles.length; i++){
+    if(mouseX > userTiles[i].x && mouseX < userTiles[i].x + userTiles[i].width && mouseY > userTiles[i].y && mouseY < userTiles[i].y + userTiles[i].width){
+      draggingTile = true;
+      draggingTileIndex = i;
+      dragOffsetX = mouseX - userTiles[i].x;
+      dragOffsetY = mouseY - userTiles[i].y;
+      break;
+    }
+  }
 }
 
 function mouseReleased(){
   canDrag = true;
+
+  if(draggingTile){
+    let tileWidth = userTiles[draggingTileIndex].width;
+    let tileCenter = createVector(userTiles[draggingTileIndex].x + tileWidth / 2, userTiles[draggingTileIndex].y + tileWidth  / 2);
+    if(tileCenter.y > windowHeight - 50){
+      draggingTile = false;
+      userTiles[draggingTileIndex].x = tileRestingPositions[draggingTileIndex].x;
+      userTiles[draggingTileIndex].y = tileRestingPositions[draggingTileIndex].y;
+    }
+    draggingTile = false;
+  }
 }
 
 function checkDictionary(word){
