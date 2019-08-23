@@ -5,12 +5,18 @@ class Tile{
     this.x = x;
     this.y = y;
     this.onBoard = false;
+    this.committedToBoard = false;
     this.boardX = 0;
     this.boardY = 0;
   }
 
   drawTile(){
-    fill(255, 0, 0);
+    if(this.committedToBoard){
+      fill(0, 0, 255);
+    }
+    else{
+      fill(255, 0, 0);
+    }
     square(this.x, this.y, this.width);
     fill(255, 255, 255);
     textSize(this.width / 1.25);
