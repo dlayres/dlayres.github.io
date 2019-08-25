@@ -143,8 +143,8 @@ function mousePressed(){
   for(let i = 0; i < userTiles.length; i++){
     if(!userTiles[i].committedToBoard && mouseX > userTiles[i].x && mouseX < userTiles[i].x + tileWidth && mouseY > userTiles[i].y && mouseY < userTiles[i].y + tileWidth){
       draggingTile = true;
-      tileOrigX = userTiles[i].x;
-      tileOrigY = userTiles[i].y;
+      tileOrigX = userTiles[i].boardX;
+      tileOrigY = userTiles[i].boardY;
       draggingTileIndex = i;
       dragOffsetX = mouseX - userTiles[i].x;
       dragOffsetY = mouseY - userTiles[i].y;
@@ -190,6 +190,10 @@ function mouseReleased(){
           ableToPlace = false;
           break;
         }
+      }
+
+      if(tileBoardX == tileOrigX && tileBoardY == tileOrigY){
+        ableToPlace = true;
       }
     }
 
