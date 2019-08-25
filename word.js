@@ -286,6 +286,7 @@ function recallTiles(){
 function checkWord(){
   // tiles on board
   let tilesOnBoard = [];
+  let tempBoardTiles = [];
   let tileIndices = [];
   let wordTiles = [];
   // all x positions
@@ -301,121 +302,87 @@ function checkWord(){
       allY.push(userTiles[i].boardY);
     }
   }
+  for(let i = 0; i < tilesOnBoard.length; i++){
+    tempBoardTiles.push(tilesOnBoard[i]);
+  }
 
   if(tilesOnBoard.length == 0){
     sendAlert("You haven't placed any tiles on the board.");
     return;
   }
 
-  tilesOnBoard.sort((a, b) => (a.x > b.x) ? 1 : -1);
-
-  // check horizontal plausibility
-  let validHorizontal = true;
-  // first check if all on same y position
+  // First check if tiles are all in a row or column
+  let sameRow = true;
+  let sameColumn = true;
+  // Check if tiles are in same row
   let tileY = tilesOnBoard[0].y;
-  let tileBoardY = allY[0];
   for(let i = 0; i < tilesOnBoard.length; i++){
     if(tilesOnBoard[i].y != tileY){
-      validHorizontal = false;
+      sameRow = false;
     }
   }
-  if(validHorizontal){
-    // still plausible, check adjacency, along with preexisting tiles
-    // find rightmost user tile (... spreads array into list)
-    let rightmostX = Math.max(...allX);
-    let storedX = rightmostX;
-    // find index of tile and remove it
+  if(!sameRow){
+    // Check if tiles are in same column
+    let tileX = tilesOnBoard[0].x;
     for(let i = 0; i < tilesOnBoard.length; i++){
-      if(tilesOnBoard[i].boardX == rightmostX){
-        tilesOnBoard.splice(i, 1);
-        break;
+      if(tilesOnBoard[i].x != tileX){
+        sameColumn = false;
       }
     }
-    // assume a preexisting tile is directly to its right, keep going until one isn't
-    while(true){
-      let foundTile = false;
-      for(let i = 0; i < committedPositions.length; i++){
-        if(committedPositions[i].y == tileBoardY && committedPositions[i].x == rightmostX + 1){
-          // preexisting tile does exist there, find it in list of tiles
-          let checkX = rightmostX + 1;
-          let checkY = tileBoardY;
-          for(let j = 0; j < allTiles.length; j++){
-            if(allTiles[j].boardX == checkX && allTiles[j].boardY == checkY){
-              wordTiles.push(allTiles[j]);
-            }
-          }
-          rightmostX += 1;
-          foundTile = true;
-          break;
-        }
-      }
-      if(!foundTile){
-        break;
-      }
-    }
-    // keep going left from storedX (original rightmostX) until encounter empty space
-    let foundTile = true;
-    while(foundTile){
-      storedX -= 1;
-      // look in user tiles
-      let foundUserTile = false;
-      for(let i = 0; i < tilesOnBoard.length; i++){
-        if(tilesOnBoard[i].boardX == storedX){
-          tilesOnBoard.splice(i, 1);
-          foundUserTile = true;
-          break;
-        }
-      }
+  }
+  if(!sameRow && !sameColumn){
+    sendAlert("Your tiles are not in a valid configuration.");
+    return;
+  }
 
-      // look in preexisting tiles
-      if(!foundUserTile){
-        for(let i = 0; i < committedPositions.length; i++){
-          if(committedPositions[i].y == tileBoardY && committedPositions[i].x == storedX){
-            foundUserTile = true;
-            // find tile in list of tiles
-            for(let j = 0; j < allTiles.length; j++){
-              if(allTiles[j].boardX == storedX && allTiles[j].boardY == tileBoardY){
-                wordTiles.push(allTiles[j]);
-                break;
-              }
+  if(sameRow){
+    let validHorizontal = getHorizontalAdjacencies(tilesOnBoard, allX, allY);
+    if(validHorizontal[0]){
+      let wordTiles = validHorizontal[1];
+      if(wordTiles.length > 1){
+        // definitely horizontal, construct word, and list of words connected vertically, if any
+        let wordList = [];
+        wordTiles.sort((a, b) => (a.x > b.x) ? 1 : -1);
+        word = "";
+        for(let i = 0; i < wordTiles.length; i++){
+          word += wordTiles[i].letter;
+        }
+        wordList.push(word);
+
+        for(let i = 0; i < tempBoardTiles.length; i++){
+          let tile = tempBoardTiles[i];
+          let tileX = tile.boardX;
+          let tileY = tile.boardY;
+          let tileAdjacencies = getVerticalAdjacencies([tile], [tileX], [tileY])[1];
+          if(tileAdjacencies.length > 1){
+            tileAdjacencies.sort((a, b) => (a.y > b.y) ? 1 : -1);
+            let verticalWord = "";
+            for(let j = 0; j < tileAdjacencies.length; j++){
+              verticalWord += tileAdjacencies[j].letter;
             }
-            break;
+            wordList.push(verticalWord);
           }
         }
-      }
 
-      if(!foundUserTile){
-        foundTile = false;
-      }
-    }
+        for(let i = 0; i < wordList.length; i++){
+          if(!checkDictionary(wordList[i])){
+            sendAlert(wordList[i].toUpperCase() + " is not a valid word.");
+            return;
+          }
+        }
 
-    // check if tiles are still on board, if so, invalid configuration
-    if(tilesOnBoard.length > 0){
-      validHorizontal = false;
+        let successAlert = "";
+        for(let i = 0; i < wordList.length - 1; i++){
+          successAlert += (wordList[i].toUpperCase() + " played successfully.\n");
+        }
+        successAlert += (wordList[wordList.length - 1].toUpperCase() + " played successfully.");
+        commitWord(tileIndices);
+        sendAlert(successAlert);
+        return;
+      }
     }
     else{
-      // definitely horizontal, construct word
-      wordTiles.sort((a, b) => (a.x > b.x) ? 1 : -1);
-      word = "";
-      for(let i = 0; i < wordTiles.length; i++){
-        word += wordTiles[i].letter;
-      }
-      // submit word
-      if(checkDictionary(word)){
-        for(let i = 0; i < tileIndices.length; i++){
-          userTiles[tileIndices[i]].committedToBoard = true;
-          let tileLetter = tilePossibilities[Math.floor(Math.random() * tilePossibilities.length)];
-          userTiles[tileIndices[i]] = new Tile(tileLetter, tileRestingPositions[i].x, tileRestingPositions[i].y, tileWidth);
-          allTiles.push(userTiles[tileIndices[i]]);
-        }
-        for(let i = 0; i < occupiedPositions.length; i++){
-          committedPositions.push(occupiedPositions[i]);
-        }
-        sendAlert(word.toUpperCase() + " played successfully.")
-      }
-      else{
-        sendAlert(word.toUpperCase() + " is not a valid word.");
-      }
+      sendAlert("Your tiles are not in a valid configuration.");
       return;
     }
   }
@@ -437,124 +404,66 @@ function checkWord(){
       allY.push(userTiles[i].boardY);
     }
   }
-
-  tilesOnBoard.sort((a, b) => (a.y > b.y) ? 1 : -1);
-
-  // check vertical plausibility
-  let validVertical = true;
-  // first check if all on same x position
-  let tileX = tilesOnBoard[0].x;
-  let tileBoardX = allX[0];
+  tempBoardTiles = [];
   for(let i = 0; i < tilesOnBoard.length; i++){
-    if(tilesOnBoard[i].x != tileX){
-      validVertical = false;
-    }
+    tempBoardTiles.push(tilesOnBoard[i]);
   }
-  if(validVertical){
-    // still plausible, check adjacency, along with preexisting tiles
-    // find bottommost user tile (... spreads array into list)
-    let bottommostY = Math.max(...allY);
-    let storedY = bottommostY;
-    // find index of tile and remove it
-    for(let i = 0; i < tilesOnBoard.length; i++){
-      if(tilesOnBoard[i].boardY == bottommostY){
-        tilesOnBoard.splice(i, 1);
-        break;
-      }
-    }
-    // assume a preexisting tile is directly underneath it, keep going until one isn't
-    while(true){
-      let foundTile = false;
-      for(let i = 0; i < committedPositions.length; i++){
-        if(committedPositions[i].x == tileBoardX && committedPositions[i].y == bottommostY + 1){
-          // preexisting tile does exist there, find it in list of tiles
-          let checkY = bottommostY + 1;
-          let checkX = tileBoardX;
-          for(let j = 0; j < allTiles.length; j++){
-            if(allTiles[j].boardX == checkX && allTiles[j].boardY == checkY){
-              wordTiles.push(allTiles[j]);
-            }
-          }
-          bottommostY += 1;
-          foundTile = true;
-          break;
-        }
-      }
-      if(!foundTile){
-        break;
-      }
-    }
-    // keep going up from storedY (original bottommostY) until encounter empty space
-    let foundTile = true;
-    while(foundTile){
-      storedY -= 1;
-      // look in user tiles
-      let foundUserTile = false;
-      for(let i = 0; i < tilesOnBoard.length; i++){
-        if(tilesOnBoard[i].boardY == storedY){
-          tilesOnBoard.splice(i, 1);
-          foundUserTile = true;
-          break;
-        }
-      }
 
-      // look in preexisting tiles
-      if(!foundUserTile){
-        for(let i = 0; i < committedPositions.length; i++){
-          if(committedPositions[i].x == tileBoardX && committedPositions[i].y == storedY){
-            foundUserTile = true;
-            // find tile in list of tiles
-            for(let j = 0; j < allTiles.length; j++){
-              if(allTiles[j].boardY == storedY && allTiles[j].boardX == tileBoardX){
-                wordTiles.push(allTiles[j]);
-                break;
-              }
+  if(sameColumn){
+    let validVertical = getVerticalAdjacencies(tilesOnBoard, allX, allY);
+    if(validVertical[0]){
+      let wordTiles = validVertical[1];
+      if(wordTiles.length > 1){
+        // definitely vertical, construct word
+        let wordList = [];
+        wordTiles.sort((a, b) => (a.y > b.y) ? 1 : -1);
+        word = "";
+        for(let i = 0; i < wordTiles.length; i++){
+          word += wordTiles[i].letter;
+        }
+        wordList.push(word);
+
+        for(let i = 0; i < tempBoardTiles.length; i++){
+          let tile = tempBoardTiles[i];
+          let tileX = tile.boardX;
+          let tileY = tile.boardY;
+          let tileAdjacencies = getHorizontalAdjacencies([tile], [tileX], [tileY])[1];
+          if(tileAdjacencies.length > 1){
+            tileAdjacencies.sort((a, b) => (a.x > b.x) ? 1 : -1);
+            let horizontalWord = "";
+            for(let j = 0; j < tileAdjacencies.length; j++){
+              horizontalWord += tileAdjacencies[j].letter;
             }
-            break;
+            wordList.push(horizontalWord);
           }
         }
-      }
 
-      if(!foundUserTile){
-        foundTile = false;
-      }
-    }
+        for(let i = 0; i < wordList.length; i++){
+          if(!checkDictionary(wordList[i])){
+            sendAlert(wordList[i].toUpperCase() + " is not a valid word.");
+            return;
+          }
+        }
 
-    // check if tiles are still on board, if so, invalid configuration
-    if(tilesOnBoard.length > 0){
-      validVertical = false;
+        let successAlert = "";
+        for(let i = 0; i < wordList.length - 1; i++){
+          successAlert += (wordList[i].toUpperCase() + " played successfully.\n");
+        }
+        successAlert += (wordList[wordList.length - 1].toUpperCase() + " played successfully.");
+        commitWord(tileIndices);
+        sendAlert(successAlert);
+        return;
+      }
     }
     else{
-      // definitely vertical, construct word
-      wordTiles.sort((a, b) => (a.y > b.y) ? 1 : -1);
-      word = "";
-      for(let i = 0; i < wordTiles.length; i++){
-        word += wordTiles[i].letter;
-      }
-      // submit word
-      if(checkDictionary(word)){
-        for(let i = 0; i < tileIndices.length; i++){
-          userTiles[tileIndices[i]].committedToBoard = true;
-          let tileLetter = tilePossibilities[Math.floor(Math.random() * tilePossibilities.length)];
-          userTiles[tileIndices[i]] = new Tile(tileLetter, tileRestingPositions[i].x, tileRestingPositions[i].y, tileWidth);
-          allTiles.push(userTiles[tileIndices[i]]);
-        }
-        for(let i = 0; i < occupiedPositions.length; i++){
-          committedPositions.push(occupiedPositions[i]);
-        }
-        sendAlert(word.toUpperCase() + " played successfully.")
-      }
-      else{
-        sendAlert(word.toUpperCase() + " is not a valid word.");
-      }
+      sendAlert("Your tiles are not in a valid configuration.");
       return;
     }
   }
 
-  if(!validHorizontal && !validVertical){
-    sendAlert("Your tiles are not in a valid configuration.");
-    return;
-  }
+  // Code should not reach here, but if it does, send an error
+  sendAlert("Your tiles are not in a valid configuration.");
+  return;
 }
 
 
@@ -580,5 +489,185 @@ function drawGrid(pos){
   }
   for(let j = pos.y - gridSpacing; j > -windowHeight; j-=gridSpacing){
     line(0, j, windowWidth, j);
+  }
+}
+
+function getHorizontalAdjacencies(boardTiles, xPositions, yPositions){
+  let adjacencies = [];
+
+  for(let i = 0; i < boardTiles.length; i++){
+    adjacencies.push(boardTiles[i]);
+  }
+
+  // sort tiles by x position
+  boardTiles.sort((a, b) => (a.x > b.x) ? 1 : -1);
+  let yPos = yPositions[0];
+
+  // find rightmost user tile (... spreads array into list)
+  let rightmostX = Math.max(...xPositions);
+  let storedX = rightmostX;
+
+  // find index of tile and remove it
+  for(let i = 0; i < boardTiles.length; i++){
+    if(boardTiles[i].boardX == rightmostX){
+      boardTiles.splice(i, 1);
+      break;
+    }
+  }
+
+  // assume a preexisting tile is directly to its right, keep going until one isn't
+  while(true){
+    let foundTile = false;
+    for(let i = 0; i < committedPositions.length; i++){
+      if(committedPositions[i].y == yPos && committedPositions[i].x == rightmostX + 1){
+        // preexisting tile does exist there, find it in list of tiles
+        for(let j = 0; j < allTiles.length; j++){
+          if(allTiles[j].boardX == rightmostX + 1 && allTiles[j].boardY == yPos){
+            adjacencies.push(allTiles[j]);
+          }
+        }
+        rightmostX += 1;
+        foundTile = true;
+        break;
+      }
+    }
+    if(!foundTile){
+      break;
+    }
+  }
+
+  // keep going left from storedX (original rightmostX) until encounter empty space
+  let foundTile = true;
+  while(foundTile){
+    storedX -= 1;
+    // look in user tiles
+    let foundUserTile = false;
+    for(let i = 0; i < boardTiles.length; i++){
+      if(boardTiles[i].boardX == storedX){
+        boardTiles.splice(i, 1);
+        foundUserTile = true;
+        break;
+      }
+    }
+
+    // look in preexisting tiles
+    if(!foundUserTile){
+      for(let i = 0; i < committedPositions.length; i++){
+        if(committedPositions[i].y == yPos && committedPositions[i].x == storedX){
+          foundUserTile = true;
+          // find tile in list of tiles
+          for(let j = 0; j < allTiles.length; j++){
+            if(allTiles[j].boardX == storedX && allTiles[j].boardY == yPos){
+              adjacencies.push(allTiles[j]);
+              break;
+            }
+          }
+          break;
+        }
+      }
+    }
+
+    if(!foundUserTile){
+      foundTile = false;
+    }
+  }
+
+  let validHorizontal = (boardTiles.length == 0);
+  return [validHorizontal, adjacencies];
+}
+
+function getVerticalAdjacencies(boardTiles, xPositions, yPositions){
+  let adjacencies = [];
+
+  for(let i = 0; i < boardTiles.length; i++){
+    adjacencies.push(boardTiles[i]);
+  }
+
+  // sort tiles by y position
+  boardTiles.sort((a, b) => (a.y > b.y) ? 1 : -1);
+  let xPos = xPositions[0];
+
+  // find bottommost user tile (... spreads array into list)
+  let bottommostY = Math.max(...yPositions);
+  let storedY = bottommostY;
+
+  // find index of tile and remove it
+  for(let i = 0; i < boardTiles.length; i++){
+    if(boardTiles[i].boardY == bottommostY){
+      boardTiles.splice(i, 1);
+      break;
+    }
+  }
+
+  // assume a preexisting tile is directly underneath it, keep going until one isn't
+  while(true){
+    let foundTile = false;
+    for(let i = 0; i < committedPositions.length; i++){
+      if(committedPositions[i].x == xPos && committedPositions[i].y == bottommostY + 1){
+        // preexisting tile does exist there, find it in list of tiles
+        for(let j = 0; j < allTiles.length; j++){
+          if(allTiles[j].boardY == bottommostY + 1 && allTiles[j].boardX == xPos){
+            adjacencies.push(allTiles[j]);
+          }
+        }
+        bottommostY += 1;
+        foundTile = true;
+        break;
+      }
+    }
+    if(!foundTile){
+      break;
+    }
+  }
+
+  // keep going up from storedY (original bottommostY) until encounter empty space
+  let foundTile = true;
+  while(foundTile){
+    storedY -= 1;
+    // look in user tiles
+    let foundUserTile = false;
+    for(let i = 0; i < boardTiles.length; i++){
+      if(boardTiles[i].boardY == storedY){
+        boardTiles.splice(i, 1);
+        foundUserTile = true;
+        break;
+      }
+    }
+
+    // look in preexisting tiles
+    if(!foundUserTile){
+      for(let i = 0; i < committedPositions.length; i++){
+        if(committedPositions[i].x == xPos && committedPositions[i].y == storedY){
+          foundUserTile = true;
+          // find tile in list of tiles
+          for(let j = 0; j < allTiles.length; j++){
+            if(allTiles[j].boardY == storedY && allTiles[j].boardX == xPos){
+              adjacencies.push(allTiles[j]);
+              break;
+            }
+          }
+          break;
+        }
+      }
+    }
+
+    if(!foundUserTile){
+      foundTile = false;
+    }
+  }
+
+  let validVertical = (boardTiles.length == 0);
+  return [validVertical, adjacencies];
+}
+
+function commitWord(indices){
+  for(let i = 0; i < indices.length; i++){
+    userTiles[indices[i]].committedToBoard = true;
+    let tileLetter = tilePossibilities[Math.floor(Math.random() * tilePossibilities.length)];
+    userTiles[indices[i]] = new Tile(tileLetter, tileRestingPositions[i].x, tileRestingPositions[i].y, tileWidth);
+    allTiles.push(userTiles[indices[i]]);
+  }
+  for(let i = 0; i < occupiedPositions.length; i++){
+    committedPositions.push(occupiedPositions[i]);
   }
 }
