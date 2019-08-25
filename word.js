@@ -7,27 +7,27 @@ let dictionary;
 let submitWordButton;
 let recallTilesButton;
 let userPos;
-let gridSpacing;
-let scrollFactor;
-let userTiles;
-let allTiles;
+let gridSpacing = 60;
+let scrollFactor = 0.015;
+let userTiles = [];
+let allTiles = [];
 let tilePossibilities;
-let tileWidth = 40;
+let tileWidth = gridSpacing;
 let canDrag = true;
 let draggingTile = false;
 let draggingTileIndex;
 let dragOffsetX;
 let dragOffsetY;
-let tileRestingPositions;
+let tileRestingPositions = [];
 let alertDebounce = 0;
 let debounceAmount = 15;
 let maxTiles = 7;
-let occupiedPositions;
-let committedPositions;
+let occupiedPositions = [];
+let committedPositions = [];
 let tileOrigX;
 let tileOrigY;
 let restingY;
-let bottomPanelHeight;
+let bottomPanelHeight = 75;
 
 function preload(){
   dictionaryHalf1 = loadStrings("https://gist.githubusercontent.com/dlayres/5919e00889614b854092b86d76d55815/raw/6025c962aaa62766140a9ea0bfadba9dd4d07e61/dictHalf1.txt");
@@ -43,14 +43,8 @@ function setup(){
   recallTilesButton = createButton("Recall Tiles");
   recallTilesButton.position(20, windowHeight - 60);
   recallTilesButton.mousePressed(recallTiles);
-  userPos = createVector(0, 0);
-  gridSpacing = 40;
-  bottomPanelHeight = 75;
-  scrollFactor = 0.015;
 
-  tileRestingPositions = [];
-  occupiedPositions = [];
-  committedPositions = [];
+  userPos = createVector(0, 0);
 
   // Tile letter distribution, blanks not yet implemented
   tilePossibilities = ["A", "A", "A", "A", "A", "A", "A", "A", "A", "B", "B", "C", "C", "D", "D", "D", "D", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E",
@@ -58,15 +52,11 @@ function setup(){
                        "N", "O", "O", "O", "O", "O", "O", "O", "O", "P", "P", "Q", "R", "R", "R", "R", "R", "R", "S", "S", "S", "S", "T", "T", "T", "T", "T", "T", "U",
                        "U", "U", "U", "V", "V", "W", "W", "X", "Y", "Y", "Z"];
 
-  userTiles = [];
-  allTiles = [];
   restingY = windowHeight - bottomPanelHeight + ((bottomPanelHeight - tileWidth) / 2);
   for(let i = 0; i < maxTiles; i++){
-    tileRestingPositions.push(createVector(50 * (i + 4), restingY));
+    tileRestingPositions.push(createVector((tileWidth + 10) * (i + 4), restingY));
     let tileLetter = tilePossibilities[Math.floor(Math.random() * tilePossibilities.length)];
     userTiles.push(new Tile(tileLetter, tileRestingPositions[i].x, tileRestingPositions[i].y, tileWidth));
-  }
-  for(let i = 0; i < maxTiles; i++){
     allTiles.push(userTiles[i]);
   }
 }
@@ -90,8 +80,8 @@ function draw(){
     allTiles[i].drawTile();
   }
 
-  rect(0, windowHeight - bottomPanelHeight, windowWidth, windowHeight - bottomPanelHeight);
   circle(userPos.x, userPos.y, 10);
+  rect(0, windowHeight - bottomPanelHeight, windowWidth, windowHeight - bottomPanelHeight);
 
   for(let i = 0; i < userTiles.length; i++){
     if(!userTiles[i].onBoard && i != draggingTileIndex){
@@ -153,9 +143,6 @@ function mousePressed(){
   }
   if(draggingTile){
     canDrag = false;
-  }
-  else{
-    canDrag = true;
   }
 }
 
