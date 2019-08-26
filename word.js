@@ -33,10 +33,11 @@ let alertImg;
 let alertOpacity;
 let displayAlert;
 let alertMsg;
+let firebaseAPIKey = databaseConfig.firebaseKey;
 
 // Your web app's Firebase configuration
 let firebaseConfig = {
-  apiKey: "AIzaSyD0U11kZmsJRZIoZveUkNSsfpqTyzFdKl4",
+  apiKey: firebaseAPIKey, 
   authDomain: "word-a8b6a.firebaseapp.com",
   databaseURL: "https://word-a8b6a.firebaseio.com",
   projectId: "word-a8b6a",
@@ -50,7 +51,7 @@ function preload(){
   dictionaryHalf2 = loadStrings("https://gist.githubusercontent.com/dlayres/de5c600219a07c1dd3a1589293cdf3b4/raw/51af4ebfea0538b55f5f43cc8dd9a5863dcadf97/dictHalf2.txt");
   firebase.initializeApp(firebaseConfig);
   database = firebase.firestore();
-  alertImage = loadImage("alert.png");
+  alertImg = loadImage("https://gist.githubusercontent.com/dlayres/c71fafd0b454a46cccc2543fc6ee5163/raw/c701f7a490436b84f34166414eed2591cedae3c3/alert.png");
 }
 
 function setup(){
@@ -131,8 +132,26 @@ function draw(){
     userTiles[draggingTileIndex].drawTile();
   }
 
-  if(displayAlert){
-    image(alertImg, 0, 0);
+  if(displayAlert == "inc" || displayAlert == "dec"){
+    tint(255, alertOpacity);
+    let width = alertImg.width;
+    let emptySideWidth = (windowWidth - width) / 2;
+    image(alertImg, emptySideWidth, 10);
+    textSize(alertImg.height * 0.55);
+    let textEmptySideWidth = (width - textWidth(alertMsg)) / 2;
+    text(alertMsg, emptySideWidth + textEmptySideWidth, 48);
+    if(displayAlert == "inc"){
+      alertOpacity+=10;
+    }
+    else{
+      alertOpacity-=10;
+    }
+    if(alertOpacity == 2000){
+      displayAlert = "dec";
+    }
+    else if(alertOpacity == 0){
+      displayAlert = 0;
+    }
   }
 }
 
@@ -152,12 +171,10 @@ function mouseWheel(event){
 */
 
 function mouseDragged(event){
-  console.log(canDrag);
   if(alertDebounce != 0){
     canDrag = false;
   }
   else if(canDrag){
-    console.log("shouldDrag");
     userPos.add(createVector(event.movementX, event.movementY));
     for(let i = 0; i < allTiles.length; i++){
       if(allTiles[i].onBoard){
@@ -505,7 +522,8 @@ function checkDictionary(word){
 }
 
 function sendAlert(msg){
-  displayAlert = true;
+  // Alert should start by increasing in opacity
+  displayAlert = "inc";
   alertMsg = msg;
   alertOpacity = 0;
 }
