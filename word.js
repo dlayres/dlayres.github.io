@@ -30,14 +30,16 @@ let restingY;
 let bottomPanelHeight = 75;
 let database;
 let alertImg;
-let alertOpacity;
+let alertOpacity = 0;
 let displayAlert;
-let alertMsg;
+let defaultAlertHoldTimer = 250;
+let alertHoldTimer = defaultAlertHoldTimer;
+let alertMsg = "";
 let firebaseAPIKey = databaseConfig.firebaseKey;
 
 // Your web app's Firebase configuration
 let firebaseConfig = {
-  apiKey: firebaseAPIKey, 
+  apiKey: firebaseAPIKey,
   authDomain: "word-a8b6a.firebaseapp.com",
   databaseURL: "https://word-a8b6a.firebaseio.com",
   projectId: "word-a8b6a",
@@ -132,7 +134,7 @@ function draw(){
     userTiles[draggingTileIndex].drawTile();
   }
 
-  if(displayAlert == "inc" || displayAlert == "dec"){
+  if(displayAlert == "inc" || displayAlert == "dec" || displayAlert == "const"){
     tint(255, alertOpacity);
     let width = alertImg.width;
     let emptySideWidth = (windowWidth - width) / 2;
@@ -141,16 +143,26 @@ function draw(){
     let textEmptySideWidth = (width - textWidth(alertMsg)) / 2;
     text(alertMsg, emptySideWidth + textEmptySideWidth, 48);
     if(displayAlert == "inc"){
-      alertOpacity+=10;
+      alertOpacity+=5;
+    }
+    else if(displayAlert == "const"){
+      alertOpacity = 200;
+      alertHoldTimer-=1;
+      if(alertHoldTimer <= 0){
+        alertHoldTimer = defaultAlertHoldTimer;
+        displayAlert = "dec";
+      }
     }
     else{
-      alertOpacity-=10;
+      alertOpacity-=5;
     }
-    if(alertOpacity == 2000){
-      displayAlert = "dec";
+    if(alertOpacity == 210){
+      displayAlert = "const";
+      alertOpacity-=10;
     }
     else if(alertOpacity == 0){
       displayAlert = 0;
+      tint(255, 255);
     }
   }
 }
@@ -730,5 +742,18 @@ function commitWord(indices){
   }
   for(let i = 0; i < occupiedPositions.length; i++){
     committedPositions.push(occupiedPositions[i]);
+  }
+}
+
+
+// "Developer Functions" (remove if game ever public)//
+function deleteDatabase(){
+  let response = prompt("Type 'DELETE' to remove all tiles from database.");
+  if(response == "DELETE"){
+    database.collection("tiles").get().then((query) => {
+      query.forEach((doc) => {
+        doc.ref.delete();
+      });
+    });
   }
 }
