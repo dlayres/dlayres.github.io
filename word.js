@@ -37,8 +37,13 @@ let alertHoldTimer = defaultAlertHoldTimer;
 let alertMsg = "";
 let firebaseAPIKey;
 let firebaseConfig;
+let tilePlaceSound;
+let tilePlaceSoundLow;
 
 function preload(){
+  soundFormats('mp3', 'ogg');
+  tilePlaceSound = loadSound("https://gist.githubusercontent.com/dlayres/8efc85bae4664edff5152f2b17d93b92/raw/d95d200d99b6cb337341d6e6ad7692566fb0051a/tileClack.mp3");
+  tilePlaceSoundLow = loadSound("https://gist.githubusercontent.com/dlayres/374cd164b593e915790abe7624bc0151/raw/7d54bd034c4b89279597307ebdf78ee40b9f711a/tileClackLow.mp3");
   dictionaryHalf1 = loadStrings("https://gist.githubusercontent.com/dlayres/5919e00889614b854092b86d76d55815/raw/6025c962aaa62766140a9ea0bfadba9dd4d07e61/dictHalf1.txt");
   dictionaryHalf2 = loadStrings("https://gist.githubusercontent.com/dlayres/de5c600219a07c1dd3a1589293cdf3b4/raw/51af4ebfea0538b55f5f43cc8dd9a5863dcadf97/dictHalf2.txt");
   firebaseAPIKey = loadStrings("https://raw.githubusercontent.com/dlayres/fire-gist/master/api.txt?token=AIQ7QVMARAGZT26BNCIHZWK5N3324",
@@ -68,6 +73,8 @@ function setup(){
   recallTilesButton = createButton("Recall Tiles");
   recallTilesButton.position(20, windowHeight - 60);
   recallTilesButton.mousePressed(recallTiles);
+  tilePlaceSound.setVolume(1);
+  tilePlaceSoundLow.setVolume(1);
 
   userPos = createVector(0, 0);
 
@@ -174,6 +181,17 @@ function windowResized(){
   resizeCanvas(windowWidth, windowHeight);
   submitWordButton.position(20, windowHeight - 30);
   recallTilesButton.position(20, windowHeight - 60);
+
+  restingY = windowHeight - bottomPanelHeight + ((bottomPanelHeight - tileWidth) / 2);
+  tileRestingPositions = [];
+  for(let i = 0; i < maxTiles; i++){
+    tileRestingPositions.push(createVector((tileWidth + 10) * (i + 4), restingY));
+  }
+
+  for(let i = 0; i < userTiles.length; i++){
+    userTiles.x = tileRestingPositions[i].x;
+    userTiles.y = tileRestingPositions[i].y;
+  }
 }
 
 // Scrolling disabled until I figure out how to put tiles on a different-sized grid that looks good
@@ -233,6 +251,7 @@ function mouseReleased(){
     let ableToPlace = true;
     if(tileScreenCenter.y > windowHeight - bottomPanelHeight){
       ableToPlace = false;
+      tilePlaceSoundLow.play();
     }
     else{
       tileBoardX = tileOffsetCenter.x - tileOffsetCenter.x % 10;
@@ -311,6 +330,9 @@ function mouseReleased(){
       userTiles[draggingTileIndex].x = floorX + userPos.x;
       userTiles[draggingTileIndex].y = floorY + userPos.y;
       userTiles[draggingTileIndex].onBoard = true;
+      if(userTiles[draggingTileIndex].boardX != floorX / gridSpacing || userTiles[draggingTileIndex].boardY != floorY / gridSpacing){
+        tilePlaceSound.play();
+      }
       userTiles[draggingTileIndex].boardX = floorX / gridSpacing;
       userTiles[draggingTileIndex].boardY = floorY / gridSpacing;
 

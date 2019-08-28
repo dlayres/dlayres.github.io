@@ -1,0 +1,13 @@
+Pre-alpha v1:
+	Add tiles, game board (v)
+	Ability to place letters and form words according to scrabble rules (v)
+	Recall Tiles (v)
+
+Pre-alpha v2:
+	Persistent database (v)
+	Point values for letters, keep track of points
+	Blank tiles, interface for choosing letter
+	Shuffle tiles around along bottom, or reorder with button
+	
+	
+	
