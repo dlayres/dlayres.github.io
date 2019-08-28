@@ -6,12 +6,15 @@ let dictionaryHalf2;
 let dictionary;
 let submitWordButton;
 let recallTilesButton;
+let shuffleTilesButton;
 let userPos;
 let gridSpacing = 60;
 let scrollFactor = 0.015;
+let userPoints = 0;
 let userTiles = [];
 let allTiles = [];
-let tilePossibilities;
+let tilePossibilities = [];
+let letterPoints = new Map();
 let tileWidth = gridSpacing;
 let canDrag = true;
 let draggingTile = false;
@@ -73,6 +76,9 @@ function setup(){
   recallTilesButton = createButton("Recall Tiles");
   recallTilesButton.position(20, windowHeight - 60);
   recallTilesButton.mousePressed(recallTiles);
+  shuffleTilesButton = createButton("Shuffle Tiles");
+  shuffleTilesButton.position(windowWidth - shuffleTilesButton.width - 20, windowHeight - 45);
+  shuffleTilesButton.mousePressed(shuffleTiles);
   tilePlaceSound.setVolume(1);
   tilePlaceSoundLow.setVolume(1);
 
@@ -84,13 +90,40 @@ function setup(){
                        "N", "O", "O", "O", "O", "O", "O", "O", "O", "P", "P", "Q", "R", "R", "R", "R", "R", "R", "S", "S", "S", "S", "T", "T", "T", "T", "T", "T", "U",
                        "U", "U", "U", "V", "V", "W", "W", "X", "Y", "Y", "Z"];
 
+  letterPoints.set("A", 1);
+  letterPoints.set("B", 3);
+  letterPoints.set("C", 3);
+  letterPoints.set("D", 2);
+  letterPoints.set("E", 1);
+  letterPoints.set("F", 4);
+  letterPoints.set("G", 2);
+  letterPoints.set("H", 4);
+  letterPoints.set("I", 1);
+  letterPoints.set("J", 8);
+  letterPoints.set("K", 5);
+  letterPoints.set("L", 1);
+  letterPoints.set("M", 3);
+  letterPoints.set("N", 1);
+  letterPoints.set("O", 1);
+  letterPoints.set("P", 3);
+  letterPoints.set("Q", 10);
+  letterPoints.set("R", 1);
+  letterPoints.set("S", 1);
+  letterPoints.set("T", 1);
+  letterPoints.set("U", 1);
+  letterPoints.set("V", 4);
+  letterPoints.set("W", 4);
+  letterPoints.set("X", 8);
+  letterPoints.set("Y", 4);
+  letterPoints.set("Z", 10);
+
   // Get preexisting tiles from database
   database.collection("tiles").get().then((query) => {
     query.forEach((doc) => {
       let tileLetter = doc.data().tileLetter;
       let xPosition = doc.data().xPosition;
       let yPosition = doc.data().yPosition;
-      allTiles.push(new Tile(tileLetter, xPosition * gridSpacing + userPos.x, yPosition * gridSpacing + userPos.y, tileWidth));
+      allTiles.push(new Tile(tileLetter, letterPoints.get(tileLetter), xPosition * gridSpacing + userPos.x, yPosition * gridSpacing + userPos.y, tileWidth));
       let lastIndex = allTiles.length - 1;
       allTiles[lastIndex].onBoard = true;
       allTiles[lastIndex].committedToBoard = true;
@@ -105,7 +138,7 @@ function setup(){
   for(let i = 0; i < maxTiles; i++){
     tileRestingPositions.push(createVector((tileWidth + 10) * (i + 4), restingY));
     let tileLetter = tilePossibilities[Math.floor(Math.random() * tilePossibilities.length)];
-    userTiles.push(new Tile(tileLetter, tileRestingPositions[i].x, tileRestingPositions[i].y, tileWidth));
+    userTiles.push(new Tile(tileLetter, letterPoints.get(tileLetter), tileRestingPositions[i].x, tileRestingPositions[i].y, tileWidth));
     allTiles.push(userTiles[i]);
   }
 }
@@ -131,6 +164,9 @@ function draw(){
 
   circle(userPos.x, userPos.y, 10);
   rect(0, windowHeight - bottomPanelHeight, windowWidth, windowHeight - bottomPanelHeight);
+  fill(0, 0, 0);
+  textSize(tileWidth / 2.5);
+  text("Points: "+ userPoints, submitWordButton.width + 35, windowHeight - 30);
 
   for(let i = 0; i < userTiles.length; i++){
     if(!userTiles[i].onBoard && i != draggingTileIndex){
@@ -181,6 +217,7 @@ function windowResized(){
   resizeCanvas(windowWidth, windowHeight);
   submitWordButton.position(20, windowHeight - 30);
   recallTilesButton.position(20, windowHeight - 60);
+  shuffleTilesButton.position(windowWidth - shuffleTilesButton.width - 20, windowHeight - 45);
 
   restingY = windowHeight - bottomPanelHeight + ((bottomPanelHeight - tileWidth) / 2);
   tileRestingPositions = [];
@@ -370,6 +407,21 @@ function recallTiles(){
   }
 }
 
+function shuffleTiles(){
+  let tempTiles = [];
+  for(let i = 0; i < userTiles.length; i++){
+    tempTiles.push(userTiles[i]);
+  }
+  for(let i = tempTiles.length - 1; i > 0; i-=1) {
+    let randomIndex = Math.floor(Math.random() * (i + 1));
+    [tempTiles[i], tempTiles[randomIndex]] = [tempTiles[randomIndex], tempTiles[i]];
+  }
+  userTiles = [];
+  for(let i = 0; i < tempTiles.length; i++){
+    userTiles.push(tempTiles[i]);
+  }
+}
+
 function checkWord(){
   // tiles on board
   let tilesOnBoard = [];
@@ -430,11 +482,13 @@ function checkWord(){
         // definitely horizontal, construct word, and list of words connected vertically, if any
         let wordList = [];
         wordTiles.sort((a, b) => (a.x > b.x) ? 1 : -1);
-        word = "";
+        let word = "";
+        let possiblePoints = 0;
         for(let i = 0; i < wordTiles.length; i++){
           word += wordTiles[i].letter;
+          possiblePoints += wordTiles[i].points;
         }
-        wordList.push(word);
+        wordList.push([word, possiblePoints]);
 
         for(let i = 0; i < tempBoardTiles.length; i++){
           let tile = tempBoardTiles[i];
@@ -444,26 +498,32 @@ function checkWord(){
           if(tileAdjacencies.length > 1){
             tileAdjacencies.sort((a, b) => (a.y > b.y) ? 1 : -1);
             let verticalWord = "";
+            let possiblePoints = 0;
             for(let j = 0; j < tileAdjacencies.length; j++){
               verticalWord += tileAdjacencies[j].letter;
+              possiblePoints += tileAdjacencies[j].points;
             }
-            wordList.push(verticalWord);
+            wordList.push([verticalWord, possiblePoints]);
           }
         }
 
         for(let i = 0; i < wordList.length; i++){
-          if(!checkDictionary(wordList[i])){
-            sendAlert(wordList[i].toUpperCase() + " is not a valid word.");
+          if(!checkDictionary(wordList[i][0])){
+            sendAlert(wordList[i][0].toUpperCase() + " is not a valid word.");
             return;
           }
         }
 
         let successAlert = "";
+        let totalPoints = 0;
         for(let i = 0; i < wordList.length - 1; i++){
-          successAlert += (wordList[i].toUpperCase() + " played successfully.\n");
+          successAlert += (wordList[i][0].toUpperCase() + " played successfully.\n");
+          totalPoints += wordList[i][1];
         }
-        successAlert += (wordList[wordList.length - 1].toUpperCase() + " played successfully.");
+        successAlert += (wordList[wordList.length - 1][0].toUpperCase() + " played successfully.");
+        totalPoints += wordList[wordList.length - 1][1];
         commitWord(tileIndices);
+        userPoints += totalPoints;
         //sendAlert(successAlert);
         return;
       }
@@ -504,11 +564,13 @@ function checkWord(){
         // definitely vertical, construct word
         let wordList = [];
         wordTiles.sort((a, b) => (a.y > b.y) ? 1 : -1);
-        word = "";
+        let word = "";
+        let possiblePoints = 0;
         for(let i = 0; i < wordTiles.length; i++){
           word += wordTiles[i].letter;
+          possiblePoints += wordTiles[i].points;
         }
-        wordList.push(word);
+        wordList.push([word, possiblePoints]);
 
         for(let i = 0; i < tempBoardTiles.length; i++){
           let tile = tempBoardTiles[i];
@@ -518,26 +580,32 @@ function checkWord(){
           if(tileAdjacencies.length > 1){
             tileAdjacencies.sort((a, b) => (a.x > b.x) ? 1 : -1);
             let horizontalWord = "";
+            let possiblePoints = 0;
             for(let j = 0; j < tileAdjacencies.length; j++){
               horizontalWord += tileAdjacencies[j].letter;
+              possiblePoints += tileAdjacencies[j].points;
             }
-            wordList.push(horizontalWord);
+            wordList.push([horizontalWord, possiblePoints]);
           }
         }
 
         for(let i = 0; i < wordList.length; i++){
-          if(!checkDictionary(wordList[i])){
-            sendAlert(wordList[i].toUpperCase() + " is not a valid word.");
+          if(!checkDictionary(wordList[i][0])){
+            sendAlert(wordList[i][0].toUpperCase() + " is not a valid word.");
             return;
           }
         }
 
         let successAlert = "";
+        let totalPoints = 0;
         for(let i = 0; i < wordList.length - 1; i++){
-          successAlert += (wordList[i].toUpperCase() + " played successfully.\n");
+          successAlert += (wordList[i][0].toUpperCase() + " played successfully.\n");
+          totalPoints += wordList[i][1];
         }
-        successAlert += (wordList[wordList.length - 1].toUpperCase() + " played successfully.");
+        successAlert += (wordList[wordList.length - 1][0].toUpperCase() + " played successfully.");
+        totalPoints += wordList[wordList.length - 1][1];
         commitWord(tileIndices);
+        userPoints += totalPoints;
         //sendAlert(successAlert);
         return;
       }
@@ -762,7 +830,7 @@ function commitWord(indices){
     })
 
     let tileLetter = tilePossibilities[Math.floor(Math.random() * tilePossibilities.length)];
-    userTiles[indices[i]] = new Tile(tileLetter, tileRestingPositions[i].x, tileRestingPositions[i].y, tileWidth);
+    userTiles[indices[i]] = new Tile(tileLetter, letterPoints.get(tileLetter), tileRestingPositions[i].x, tileRestingPositions[i].y, tileWidth);
     allTiles.push(userTiles[indices[i]]);
   }
   for(let i = 0; i < occupiedPositions.length; i++){
