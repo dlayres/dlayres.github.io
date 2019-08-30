@@ -157,6 +157,51 @@ function draw(){
   if(draggingTile){
     userTiles[draggingTileIndex].x = mouseX - dragOffsetX;
     userTiles[draggingTileIndex].y = mouseY - dragOffsetY;
+
+    if(userTiles[draggingTileIndex].y + (tileWidth / 2) < windowHeight && userTiles[draggingTileIndex].y + (tileWidth / 2) > (windowHeight - bottomPanelHeight)){
+      // Get tile directly to left, if exists
+      let minSpacing = Infinity;
+      let leftTileIndex = -1;
+      let rightTileIndex = -1;
+      for(let i = 0; i < userTiles.length; i++){
+        if(i != draggingTileIndex && userTiles[i].x + (tileWidth / 2) < userTiles[draggingTileIndex].x + (tileWidth / 2) && ((userTiles[draggingTileIndex].x + (tileWidth / 2)) - (userTiles[i].x + (tileWidth / 2))) < minSpacing){
+          minSpacing = userTiles[draggingTileIndex].x - userTiles[i].x;
+          leftTileIndex = i;
+        }
+      }
+
+      // Get tile directly to right, if exists
+      minSpacing = Infinity;
+      rightTileIndex = -1;
+      for(let i = 0; i < userTiles.length; i++){
+        if(i != draggingTileIndex && userTiles[i].x + (tileWidth / 2) > userTiles[draggingTileIndex].x + (tileWidth / 2) && ((userTiles[i].x + (tileWidth / 2)) - (userTiles[draggingTileIndex].x + (tileWidth / 2))) < minSpacing){
+          minSpacing = userTiles[i].x - userTiles[draggingTileIndex].x;
+          rightTileIndex = i;
+        }
+      }
+
+      if(leftTileIndex >= 0 && rightTileIndex >= 0){
+        if(rightTileIndex >= 0 && userTiles[rightTileIndex].x - userTiles[leftTileIndex].x == tileWidth + 10){
+          // In between two tiles
+          if(rightTileIndex < draggingTileIndex){
+            // Tile coming from left
+            shiftTiles(rightTileIndex, draggingTileIndex);
+          }
+          else{
+            // Tile coming from right
+            shiftTiles(leftTileIndex, draggingTileIndex);
+          }
+        }
+      }
+      else if(leftTileIndex == maxTiles - 1){
+        // Tile on far right
+        shiftTiles(leftTileIndex, draggingTileIndex);
+      }
+      else if(rightTileIndex == 0){
+        // Tile on far left
+        shiftTiles(rightTileIndex, draggingTileIndex);
+      }
+    }
   }
 
   for(let i = 0; i < allTiles.length; i++){
@@ -168,6 +213,11 @@ function draw(){
 
   circle(userPos.x, userPos.y, 10);
   rect(0, windowHeight - bottomPanelHeight, windowWidth, windowHeight - bottomPanelHeight);
+
+  for(let i = 0; i < tileRestingPositions.length; i++){
+    rect(tileRestingPositions[i].x, tileRestingPositions[i].y, tileWidth, tileWidth);
+  }
+
   fill(0, 0, 0);
   noStroke();
   textSize(tileWidth / 2.5);
@@ -242,8 +292,6 @@ function draw(){
     if(!blankOptionsCreated){
       blankOptions = createSelect();
       blankOptions.size(200, 50);
-      //blankOptions.width = 250;
-      //blankOptions.height = 200;
       let optionsBegin = (windowWidth * 0.3) + ((windowWidth * 0.4) - blankOptions.width) / 2;
       blankOptions.position(optionsBegin, windowHeight * 0.3 + windowHeight * 0.2);
       for(let i = 0; i < 26; i++){
@@ -271,11 +319,17 @@ function windowResized(){
   submitWordButton.position(20, windowHeight - 30);
   recallTilesButton.position(20, windowHeight - 60);
   shuffleTilesButton.position(windowWidth - shuffleTilesButton.width - 20, windowHeight - 45);
+  submitBlankButton.position((windowWidth * 0.3) + ((windowWidth * 0.4) - submitBlankButton.width) / 2, windowHeight * 0.3 + windowHeight * 0.4 * 0.75);
 
   restingY = windowHeight - bottomPanelHeight + ((bottomPanelHeight - tileWidth) / 2);
   tileRestingPositions = [];
   for(let i = 0; i < maxTiles; i++){
     tileRestingPositions.push(createVector((tileWidth + 10) * (i + 4), restingY));
+  }
+
+  if(blankOptionsCreated){
+    let optionsBegin = (windowWidth * 0.3) + ((windowWidth * 0.4) - blankOptions.width) / 2;
+    blankOptions.position(optionsBegin, windowHeight * 0.3 + windowHeight * 0.2);
   }
 
   for(let i = 0; i < userTiles.length; i++){
@@ -337,12 +391,34 @@ function mouseReleased(){
     let tileScreenCenter = createVector(userTiles[draggingTileIndex].x + tileWidth / 2, userTiles[draggingTileIndex].y + tileWidth / 2);
     let tileOffsetCenter = p5.Vector.sub(tileScreenCenter, userPos);
 
+    // Assume tile is dropped on a valid location on the board
     let ableToPlace = true;
-    if(tileScreenCenter.y > windowHeight - bottomPanelHeight){
+    let tileMovedToNewSlot = false;
+
+    // Tile is dropped on the bottom panel, not on board
+    if(tileScreenCenter.y + (tileWidth / 2) > windowHeight - bottomPanelHeight){
       ableToPlace = false;
       tilePlaceSoundLow.play();
+
+      for(let i = 0; i < userTiles.length; i++){
+        if(i != draggingTileIndex && userTiles[i].onBoard){
+          if(abs(tileScreenCenter.x - tileRestingPositions[i].x) < tileWidth && abs(tileScreenCenter.y - tileRestingPositions[i].y) < tileWidth){
+            // Tile dropped on empty rack slot, swap indices
+            let tempTile = userTiles[draggingTileIndex];
+            userTiles[draggingTileIndex] = userTiles[i];
+            userTiles[i] = tempTile;
+            draggingTileIndex = i;
+
+            userTiles[draggingTileIndex].x = tileRestingPositions[draggingTileIndex].x;
+            userTiles[draggingTileIndex].y = tileRestingPositions[draggingTileIndex].y;
+
+            tileMovedToNewSlot = true;
+          }
+        }
+      }
     }
     else{
+      // Calculates tile board position
       tileBoardX = tileOffsetCenter.x - tileOffsetCenter.x % 10;
       tileBoardY = tileOffsetCenter.y - tileOffsetCenter.y % 10;
       while(tileBoardX % gridSpacing != 0){
@@ -354,6 +430,7 @@ function mouseReleased(){
       tileBoardX /= gridSpacing;
       tileBoardY /= gridSpacing;
 
+      // If tile board position is already occupied, cannot place tile on board
       for(let i = 0; i < occupiedPositions.length; i++){
         if(occupiedPositions[i].x == tileBoardX && occupiedPositions[i].y == tileBoardY){
           ableToPlace = false;
@@ -361,16 +438,18 @@ function mouseReleased(){
         }
       }
 
+      // Special case where tile is being placed on same spot
       if(tileBoardX == tileOrigX && tileBoardY == tileOrigY){
         ableToPlace = true;
       }
     }
 
-
     if(!ableToPlace){
       draggingTile = false;
-      userTiles[draggingTileIndex].x = tileRestingPositions[draggingTileIndex].x;
-      userTiles[draggingTileIndex].y = tileRestingPositions[draggingTileIndex].y;
+      if(!tileMovedToNewSlot){
+        userTiles[draggingTileIndex].x = tileRestingPositions[draggingTileIndex].x;
+        userTiles[draggingTileIndex].y = tileRestingPositions[draggingTileIndex].y;
+      }
       userTiles[draggingTileIndex].onBoard = false;
 
       if(userTiles[draggingTileIndex].points == 0){
@@ -902,6 +981,63 @@ function commitWord(indices){
   }
   for(let i = 0; i < occupiedPositions.length; i++){
     committedPositions.push(occupiedPositions[i]);
+  }
+}
+
+function shiftTiles(startingIndex, endingIndex){
+  if(startingIndex > endingIndex){
+    // Shifting tiles left
+    // Keep track of current endingIndex
+    let oldEndingIndex = endingIndex;
+    // Search for rightmost empty slot after startingIndex and before endingIndex
+    for(let i = startingIndex - 1; i > endingIndex; i--){
+      if(userTiles[i].onBoard){
+        endingIndex = i;
+      }
+    }
+
+    let tempTile;
+    if(oldEndingIndex != endingIndex){
+      tempTile = userTiles[oldEndingIndex];
+      userTiles[oldEndingIndex] = userTiles[endingIndex];
+    }
+    else{
+      tempTile = userTiles[endingIndex];
+    }
+
+    while(endingIndex != startingIndex){
+      userTiles[endingIndex] = userTiles[endingIndex + 1]
+      endingIndex += 1;
+    }
+    userTiles[startingIndex] = tempTile;
+    draggingTileIndex = startingIndex;
+  }
+  else{
+    // Shifting tiles right
+    // Keep track of current endingIndex
+    let oldEndingIndex = endingIndex;
+    // Search for left empty slot before endingIndex and after startingIndex
+    for(let i = startingIndex + 1; i < endingIndex; i++){
+      if(userTiles[i].onBoard){
+        endingIndex = i;
+      }
+    }
+
+    let tempTile;
+    if(oldEndingIndex != endingIndex){
+      tempTile = userTiles[oldEndingIndex];
+      userTiles[oldEndingIndex] = userTiles[endingIndex];
+    }
+    else{
+      tempTile = userTiles[endingIndex];
+    }
+
+    while(endingIndex != startingIndex){
+      userTiles[endingIndex] = userTiles[endingIndex - 1]
+      endingIndex -= 1;
+    }
+    userTiles[startingIndex] = tempTile;
+    draggingTileIndex = startingIndex;
   }
 }
 
