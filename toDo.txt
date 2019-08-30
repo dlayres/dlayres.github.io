@@ -5,8 +5,8 @@ Pre-alpha v1:
 
 Pre-alpha v2:
 	Persistent database (v)
-	Point values for letters, keep track of points
-	Blank tiles, interface for choosing letter
+	Point values for letters, keep track of points (v)
+	Blank tiles, interface for choosing letter (v)
 	Shuffle tiles around along bottom, or reorder with button
 	
 	

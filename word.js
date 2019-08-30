@@ -7,6 +7,7 @@ let dictionary;
 let submitWordButton;
 let recallTilesButton;
 let shuffleTilesButton;
+let submitBlankButton;
 let userPos;
 let gridSpacing = 60;
 let scrollFactor = 0.015;
@@ -19,11 +20,10 @@ let tileWidth = gridSpacing;
 let canDrag = true;
 let draggingTile = false;
 let draggingTileIndex;
+let blankTileIndex = -1;
 let dragOffsetX;
 let dragOffsetY;
 let tileRestingPositions = [];
-let alertDebounce = 0;
-let debounceAmount = 1;
 let maxTiles = 7;
 let occupiedPositions = [];
 let committedPositions = [];
@@ -38,6 +38,9 @@ let displayAlert;
 let defaultAlertHoldTimer = 250;
 let alertHoldTimer = defaultAlertHoldTimer;
 let alertMsg = "";
+let selectBlank = false;
+let blankOptions;
+let blankOptionsCreated = false;
 let firebaseAPIKey;
 let firebaseConfig;
 let tilePlaceSound;
@@ -79,6 +82,9 @@ function setup(){
   shuffleTilesButton = createButton("Shuffle Tiles");
   shuffleTilesButton.position(windowWidth - shuffleTilesButton.width - 20, windowHeight - 45);
   shuffleTilesButton.mousePressed(shuffleTiles);
+  submitBlankButton = createButton("Select");
+  submitBlankButton.position((windowWidth * 0.3) + ((windowWidth * 0.4) - submitBlankButton.width) / 2, windowHeight * 0.3 + windowHeight * 0.4 * 0.75);
+  submitBlankButton.mousePressed(submitBlank)
   tilePlaceSound.setVolume(1);
   tilePlaceSoundLow.setVolume(1);
 
@@ -88,7 +94,7 @@ function setup(){
   tilePossibilities = ["A", "A", "A", "A", "A", "A", "A", "A", "A", "B", "B", "C", "C", "D", "D", "D", "D", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E",
                        "F", "F", "G", "G", "G", "H", "H", "I", "I", "I", "I", "I", "I", "I", "I", "I", "J", "K", "L", "L", "L", "L", "M", "M", "N", "N", "N", "N", "N",
                        "N", "O", "O", "O", "O", "O", "O", "O", "O", "P", "P", "Q", "R", "R", "R", "R", "R", "R", "S", "S", "S", "S", "T", "T", "T", "T", "T", "T", "U",
-                       "U", "U", "U", "V", "V", "W", "W", "X", "Y", "Y", "Z"];
+                       "U", "U", "U", "V", "V", "W", "W", "X", "Y", "Y", "Z", "BL", "BL", "BL", "BL", "BL", "BL", "BL", "BL"];
 
   letterPoints.set("A", 1);
   letterPoints.set("B", 3);
@@ -116,6 +122,7 @@ function setup(){
   letterPoints.set("X", 8);
   letterPoints.set("Y", 4);
   letterPoints.set("Z", 10);
+  letterPoints.set("BL", 0);
 
   // Get preexisting tiles from database
   database.collection("tiles").get().then((query) => {
@@ -147,26 +154,24 @@ function draw(){
   background(220);
   drawGrid(userPos);
 
-  if(alertDebounce != 0){
-    alertDebounce -= 1;
-  }
-
   if(draggingTile){
     userTiles[draggingTileIndex].x = mouseX - dragOffsetX;
     userTiles[draggingTileIndex].y = mouseY - dragOffsetY;
   }
 
-  strokeWeight(2);
-
   for(let i = 0; i < allTiles.length; i++){
     allTiles[i].drawTile();
   }
 
+  strokeWeight(2);
+  stroke(0, 0, 0);
+
   circle(userPos.x, userPos.y, 10);
   rect(0, windowHeight - bottomPanelHeight, windowWidth, windowHeight - bottomPanelHeight);
   fill(0, 0, 0);
+  noStroke();
   textSize(tileWidth / 2.5);
-  text("Points: "+ userPoints, submitWordButton.width + 35, windowHeight - 30);
+  text("Points: " + userPoints, submitWordButton.width + 35, windowHeight - 30);
 
   for(let i = 0; i < userTiles.length; i++){
     if(!userTiles[i].onBoard && i != draggingTileIndex){
@@ -208,8 +213,56 @@ function draw(){
     }
     else if(alertOpacity == 0){
       displayAlert = 0;
-      tint(255, 255);
     }
+  }
+
+  if(selectBlank){
+    fill("rgba(0, 0, 0, 0.6)");
+    noStroke();
+    rect(0, 0, windowWidth, windowHeight);
+    submitWordButton.hide();
+    recallTilesButton.hide();
+    shuffleTilesButton.hide();
+    submitBlankButton.show();
+
+    stroke(0, 0, 0);
+    fill(255, 255, 255);
+    rect(windowWidth * 0.3, windowHeight * 0.3, windowWidth * 0.4, windowHeight * 0.4);
+    noStroke();
+    fill(0, 0, 0);
+    textSize(windowWidth * 0.0135);
+    let selectBlankText1 = "Select a letter for the blank tile.";
+    let selectBlankText2 = "Bringing the tile back to your tile rack will return it to a blank tile.";
+    let selectBlankTextWidth1 = textWidth(selectBlankText1);
+    let selectBlankTextWidth2 = textWidth(selectBlankText2);
+    let textBegin1 = (windowWidth * 0.3) + ((windowWidth * 0.4) - selectBlankTextWidth1) / 2;
+    let textBegin2 = (windowWidth * 0.3) + ((windowWidth * 0.4) - selectBlankTextWidth2) / 2;
+    text(selectBlankText1, textBegin1, windowHeight * 0.3 + 40);
+    text(selectBlankText2, textBegin2, windowHeight * 0.3 + 65);
+    if(!blankOptionsCreated){
+      blankOptions = createSelect();
+      blankOptions.size(200, 50);
+      //blankOptions.width = 250;
+      //blankOptions.height = 200;
+      let optionsBegin = (windowWidth * 0.3) + ((windowWidth * 0.4) - blankOptions.width) / 2;
+      blankOptions.position(optionsBegin, windowHeight * 0.3 + windowHeight * 0.2);
+      for(let i = 0; i < 26; i++){
+        blankOptions.option(String.fromCharCode(i + 65));
+        blankOptions.elt[i].style.fontSize = "22px";
+      }
+      blankOptionsCreated = true;
+    }
+  }
+  else{
+    submitWordButton.show();
+    recallTilesButton.show();
+    shuffleTilesButton.show();
+    submitBlankButton.hide();
+    if(blankOptionsCreated){
+      blankOptions.hide();
+      blankOptionsCreated = false;
+    }
+    blankOptions = null;
   }
 }
 
@@ -241,10 +294,7 @@ function mouseWheel(event){
 */
 
 function mouseDragged(event){
-  if(alertDebounce != 0){
-    canDrag = false;
-  }
-  else if(canDrag){
+  if(canDrag && !selectBlank){
     userPos.add(createVector(event.movementX, event.movementY));
     for(let i = 0; i < allTiles.length; i++){
       if(allTiles[i].onBoard){
@@ -259,15 +309,17 @@ function mousePressed(){
   if(mouseY > windowHeight - bottomPanelHeight){
     canDrag = false;
   }
-  for(let i = 0; i < userTiles.length; i++){
-    if(!userTiles[i].committedToBoard && mouseX > userTiles[i].x && mouseX < userTiles[i].x + tileWidth && mouseY > userTiles[i].y && mouseY < userTiles[i].y + tileWidth){
-      draggingTile = true;
-      tileOrigX = userTiles[i].boardX;
-      tileOrigY = userTiles[i].boardY;
-      draggingTileIndex = i;
-      dragOffsetX = mouseX - userTiles[i].x;
-      dragOffsetY = mouseY - userTiles[i].y;
-      break;
+  if(!selectBlank){
+    for(let i = 0; i < userTiles.length; i++){
+      if(!userTiles[i].committedToBoard && mouseX > userTiles[i].x && mouseX < userTiles[i].x + tileWidth && mouseY > userTiles[i].y && mouseY < userTiles[i].y + tileWidth){
+        draggingTile = true;
+        tileOrigX = userTiles[i].boardX;
+        tileOrigY = userTiles[i].boardY;
+        draggingTileIndex = i;
+        dragOffsetX = mouseX - userTiles[i].x;
+        dragOffsetY = mouseY - userTiles[i].y;
+        break;
+      }
     }
   }
   if(draggingTile){
@@ -320,6 +372,10 @@ function mouseReleased(){
       userTiles[draggingTileIndex].x = tileRestingPositions[draggingTileIndex].x;
       userTiles[draggingTileIndex].y = tileRestingPositions[draggingTileIndex].y;
       userTiles[draggingTileIndex].onBoard = false;
+
+      if(userTiles[draggingTileIndex].points == 0){
+        userTiles[draggingTileIndex].letter = "BL";
+      }
 
       tileBoardX = userTiles[draggingTileIndex].boardX;
       tileBoardY = userTiles[draggingTileIndex].boardY;
@@ -374,6 +430,10 @@ function mouseReleased(){
       userTiles[draggingTileIndex].boardY = floorY / gridSpacing;
 
       occupiedPositions.push(createVector(floorX / gridSpacing, floorY / gridSpacing));
+      if(userTiles[draggingTileIndex].letter == "BL"){
+        selectBlank = true;
+        blankTileIndex = draggingTileIndex;
+      }
     }
     draggingTile = false;
   }
@@ -420,6 +480,12 @@ function shuffleTiles(){
   for(let i = 0; i < tempTiles.length; i++){
     userTiles.push(tempTiles[i]);
   }
+}
+
+function submitBlank(){
+  selectBlank = false;
+  userTiles[blankTileIndex].letter = blankOptions.value();
+  blankTileIndex = -1;
 }
 
 function checkWord(){
@@ -634,6 +700,7 @@ function sendAlert(msg){
 }
 
 function drawGrid(pos){
+  stroke(0, 0, 0);
   strokeWeight(gridSpacing * scrollFactor);
   for(let i = pos.x; i < windowWidth; i+=gridSpacing){
     line(i, 0, i, windowHeight);
