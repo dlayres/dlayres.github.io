@@ -130,7 +130,8 @@ function setup(){
       let tileLetter = doc.data().tileLetter;
       let xPosition = doc.data().xPosition;
       let yPosition = doc.data().yPosition;
-      allTiles.push(new Tile(tileLetter, letterPoints.get(tileLetter), xPosition * gridSpacing + userPos.x, yPosition * gridSpacing + userPos.y, tileWidth));
+      let points = doc.data().points;
+      allTiles.push(new Tile(tileLetter, points, xPosition * gridSpacing + userPos.x, yPosition * gridSpacing + userPos.y, tileWidth));
       let lastIndex = allTiles.length - 1;
       allTiles[lastIndex].onBoard = true;
       allTiles[lastIndex].committedToBoard = true;
@@ -163,9 +164,11 @@ function draw(){
       let minSpacing = Infinity;
       let leftTileIndex = -1;
       let rightTileIndex = -1;
+      let tileCenterX = userTiles[draggingTileIndex].x + (tileWidth / 2);
       for(let i = 0; i < userTiles.length; i++){
-        if(i != draggingTileIndex && userTiles[i].x + (tileWidth / 2) < userTiles[draggingTileIndex].x + (tileWidth / 2) && ((userTiles[draggingTileIndex].x + (tileWidth / 2)) - (userTiles[i].x + (tileWidth / 2))) < minSpacing){
-          minSpacing = userTiles[draggingTileIndex].x - userTiles[i].x;
+        let testTileCenterX = userTiles[i].x + (tileWidth / 2);
+        if(i != draggingTileIndex && !userTiles[i].onBoard && testTileCenterX < tileCenterX && tileCenterX - testTileCenterX < minSpacing){
+          minSpacing = tileCenterX - testTileCenterX;
           leftTileIndex = i;
         }
       }
@@ -174,23 +177,22 @@ function draw(){
       minSpacing = Infinity;
       rightTileIndex = -1;
       for(let i = 0; i < userTiles.length; i++){
-        if(i != draggingTileIndex && userTiles[i].x + (tileWidth / 2) > userTiles[draggingTileIndex].x + (tileWidth / 2) && ((userTiles[i].x + (tileWidth / 2)) - (userTiles[draggingTileIndex].x + (tileWidth / 2))) < minSpacing){
-          minSpacing = userTiles[i].x - userTiles[draggingTileIndex].x;
+        let testTileCenterX = userTiles[i].x + (tileWidth / 2);
+        if(i != draggingTileIndex && !userTiles[i].onBoard && testTileCenterX > tileCenterX && testTileCenterX - tileCenterX < minSpacing){
+          minSpacing = testTileCenterX - tileCenterX;
           rightTileIndex = i;
         }
       }
 
-      if(leftTileIndex >= 0 && rightTileIndex >= 0){
-        if(rightTileIndex >= 0 && userTiles[rightTileIndex].x - userTiles[leftTileIndex].x == tileWidth + 10){
-          // In between two tiles
-          if(rightTileIndex < draggingTileIndex){
-            // Tile coming from left
-            shiftTiles(rightTileIndex, draggingTileIndex);
-          }
-          else{
-            // Tile coming from right
-            shiftTiles(leftTileIndex, draggingTileIndex);
-          }
+      if(leftTileIndex >= 0 && rightTileIndex >= 0 && rightTileIndex - leftTileIndex == 1){
+        // In between two tiles
+        if(rightTileIndex < draggingTileIndex){
+          // Tile coming from left
+          shiftTiles(rightTileIndex, draggingTileIndex);
+        }
+        else{
+          // Tile coming from right
+          shiftTiles(leftTileIndex, draggingTileIndex);
         }
       }
       else if(leftTileIndex == maxTiles - 1){
@@ -223,11 +225,15 @@ function draw(){
   textSize(tileWidth / 2.5);
   text("Points: " + userPoints, submitWordButton.width + 35, windowHeight - 30);
 
+  let numBoardTiles = 0;
   for(let i = 0; i < userTiles.length; i++){
     if(!userTiles[i].onBoard && i != draggingTileIndex){
       userTiles[i].x = tileRestingPositions[i].x;
       userTiles[i].y = tileRestingPositions[i].y;
       userTiles[i].drawTile();
+    }
+    if(userTiles[i].onBoard){
+      numBoardTiles++;
     }
   }
 
@@ -302,7 +308,12 @@ function draw(){
     }
   }
   else{
-    submitWordButton.show();
+    if(numBoardTiles == 0){
+      submitWordButton.hide();
+    }
+    else{
+      submitWordButton.show();
+    }
     recallTilesButton.show();
     shuffleTilesButton.show();
     submitBlankButton.hide();
@@ -401,8 +412,10 @@ function mouseReleased(){
       tilePlaceSoundLow.play();
 
       for(let i = 0; i < userTiles.length; i++){
-        if(i != draggingTileIndex && userTiles[i].onBoard){
-          if(abs(tileScreenCenter.x - tileRestingPositions[i].x) < tileWidth && abs(tileScreenCenter.y - tileRestingPositions[i].y) < tileWidth){
+        if(i != draggingTileIndex){
+          let tileRestCenterX = tileRestingPositions[i].x + (tileWidth / 2);
+          let tileRestCenterY = tileRestingPositions[i].y + (tileWidth / 2);
+          if(abs(tileScreenCenter.x - tileRestCenterX) < tileWidth && abs(tileScreenCenter.y - tileRestCenterY) < tileWidth){
             // Tile dropped on empty rack slot, swap indices
             let tempTile = userTiles[draggingTileIndex];
             userTiles[draggingTileIndex] = userTiles[i];
@@ -547,8 +560,24 @@ function recallTiles(){
 }
 
 function shuffleTiles(){
-  let tempTiles = [];
+  let numBoardTiles = 0;
+  let boardTileIndices = [];
+  let boardTiles = [];
   for(let i = 0; i < userTiles.length; i++){
+    if(userTiles[i].onBoard){
+      numBoardTiles++;
+      boardTileIndices.push(i);
+      boardTiles.push(userTiles[i]);
+    }
+  }
+  for(let i = 0; i < numBoardTiles; i++){
+    let tempTile = userTiles[maxTiles - 1 - i];
+    userTiles[maxTiles - 1 - i] = userTiles[boardTileIndices[i]];
+    userTiles[boardTileIndices[i]] = tempTile;
+  }
+
+  let tempTiles = [];
+  for(let i = 0; i < userTiles.length - numBoardTiles; i++){
     tempTiles.push(userTiles[i]);
   }
   for(let i = tempTiles.length - 1; i > 0; i-=1) {
@@ -558,6 +587,9 @@ function shuffleTiles(){
   userTiles = [];
   for(let i = 0; i < tempTiles.length; i++){
     userTiles.push(tempTiles[i]);
+  }
+  for(let i = 0; i < boardTiles.length; i++){
+    userTiles.push(boardTiles[i]);
   }
 }
 
@@ -969,7 +1001,8 @@ function commitWord(indices){
     database.collection("tiles").add({
       tileLetter: userTiles[indices[i]].letter,
       xPosition: userTiles[indices[i]].boardX,
-      yPosition: userTiles[indices[i]].boardY
+      yPosition: userTiles[indices[i]].boardY,
+      points: userTiles[indices[i]].points
     })
     .catch(function(error){
       console.error("Error adding document: " + error);
