@@ -570,16 +570,29 @@ function shuffleTiles(){
       boardTiles.push(userTiles[i]);
     }
   }
+
+  console.log(boardTileIndices);
+
+
   for(let i = 0; i < numBoardTiles; i++){
-    let tempTile = userTiles[maxTiles - 1 - i];
-    userTiles[maxTiles - 1 - i] = userTiles[boardTileIndices[i]];
-    userTiles[boardTileIndices[i]] = tempTile;
+    for(let j = maxTiles - 1; j >= 0; j--){
+      if(j == boardTileIndices[i]){
+        break;
+      }
+      if(!userTiles[j].onBoard){
+        let tempTile = userTiles[boardTileIndices[i]];
+        userTiles[boardTileIndices[i]] = userTiles[j];
+        userTiles[j] = tempTile;
+        break;
+      }
+    }
   }
 
   let tempTiles = [];
   for(let i = 0; i < userTiles.length - numBoardTiles; i++){
     tempTiles.push(userTiles[i]);
   }
+
   for(let i = tempTiles.length - 1; i > 0; i-=1) {
     let randomIndex = Math.floor(Math.random() * (i + 1));
     [tempTiles[i], tempTiles[randomIndex]] = [tempTiles[randomIndex], tempTiles[i]];
@@ -587,6 +600,8 @@ function shuffleTiles(){
   userTiles = [];
   for(let i = 0; i < tempTiles.length; i++){
     userTiles.push(tempTiles[i]);
+    userTiles[i].x = tileRestingPositions[i].x;
+    userTiles[i].y = tileRestingPositions[i].y;
   }
   for(let i = 0; i < boardTiles.length; i++){
     userTiles.push(boardTiles[i]);

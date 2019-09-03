@@ -8,6 +8,13 @@ Pre-alpha v2:
 	Point values for letters, keep track of points (v)
 	Blank tiles, interface for choosing letter (v)
 	Shuffle tiles around along bottom, or reorder with button (v)
+
+	ISSUES:
+		Occasional weird things happen when reordering tiles (need reproducible cases)
+
+Pre-alpha v3:
+	Make the grid more scrabble-like, add one-time bonuses
+		(double word, double letter, triple word, triple letter)
 	
 	
 	
