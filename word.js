@@ -154,6 +154,7 @@ function setup(){
 function draw(){
   background(220);
   drawGrid(userPos);
+  drawCoords(userPos);
 
   if(draggingTile){
     userTiles[draggingTileIndex].x = mouseX - dragOffsetX;
@@ -837,6 +838,85 @@ function drawGrid(pos){
   for(let j = pos.y - gridSpacing; j > -windowHeight; j-=gridSpacing){
     line(0, j, windowWidth, j);
   }
+}
+
+function drawCoords(pos){
+//  noStroke();
+  textSize(20);
+  for(let i = pos.x; i < windowWidth; i+=gridSpacing){
+    for(let j = pos.y; j < windowHeight; j+=gridSpacing){
+      let tileX = (i - pos.x) / gridSpacing;
+      let tileY = (j - pos.y) / gridSpacing;
+      let color = getColor(tileX, tileY);
+      fill(color.x, color.y, color.z);
+      rect(i, j, gridSpacing, gridSpacing);
+  //    fill(255, 0, 0);
+  //    text(tileX, i + 10, j + 30);
+  //    fill(0, 0, 255);
+  //    text(tileY, i + 30, j + 30);
+    }
+    for(let j = pos.y - gridSpacing; j > -windowHeight; j-=gridSpacing){
+      let tileX = (i - pos.x) / gridSpacing;
+      let tileY = (j - pos.y) / gridSpacing;
+      let color = getColor(tileX, tileY);
+      fill(color.x, color.y, color.z);
+      rect(i, j, gridSpacing, gridSpacing);
+    //  fill(255, 0, 0);
+    //  text(((i - pos.x) / gridSpacing).toString(), i + 10, j + 30);
+    //  fill(0, 0, 255);
+    //  text(((j - pos.y) / gridSpacing).toString(), i + 30, j + 30);
+    }
+  }
+  for(let i = pos.x - gridSpacing; i > -windowWidth; i-=gridSpacing){
+    for(let j = pos.y; j < windowHeight; j+=gridSpacing){
+      let tileX = (i - pos.x) / gridSpacing;
+      let tileY = (j - pos.y) / gridSpacing;
+      let color = getColor(tileX, tileY);
+      fill(color.x, color.y, color.z);
+      rect(i, j, gridSpacing, gridSpacing);
+  //    fill(255, 0, 0);
+    //  text(tileX, i + 10, j + 30);
+  //    fill(0, 0, 255);
+  //    text(tileY, i + 30, j + 30);
+    }
+    for(let j = pos.y - gridSpacing; j > -windowHeight; j-=gridSpacing){
+      let tileX = (i - pos.x) / gridSpacing;
+      let tileY = (j - pos.y) / gridSpacing;
+      let color = getColor(tileX, tileY);
+      fill(color.x, color.y, color.z);
+      rect(i, j, gridSpacing, gridSpacing);
+//      fill(255, 0, 0);
+  //    text(tileX, i + 10, j + 30);
+  //    fill(0, 0, 255);
+  //    text(tileY, i + 30, j + 30);
+    }
+  }
+}
+
+function getColor(x, y){
+  let color = createVector(220, 220, 220);
+
+  if(x % 14 == 0 && y % 14 == 0){
+    color = createVector(255, 255, 0);
+    return color;
+  }
+
+  if(x % 7 == 0 && y % 7 == 0){
+    color = createVector(255, 0, 0);
+    return color;
+  }
+
+  if(x - 2 % 4 == 0 && y - 2 % 4 == 0){
+    if(abs(x) == abs(y)){
+      color = createVector(255, 160, 160);
+    }
+    else{
+      color = (0, 0, 255);
+    }
+    return color;
+  }
+
+  return color;
 }
 
 function getHorizontalAdjacencies(boardTiles, xPositions, yPositions){
