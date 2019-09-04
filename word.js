@@ -11,7 +11,7 @@ let submitBlankButton;
 let userPos;
 let gridSpacing = 60;
 let scrollFactor = 0.015;
-let userPoints = [];
+let userPoints = 0;
 let userTiles = [];
 let allTiles = [];
 let tilePossibilities = [];
@@ -45,9 +45,6 @@ let firebaseAPIKey;
 let firebaseConfig;
 let tilePlaceSound;
 let tilePlaceSoundLow;
-let numPlayers = 0;
-let playerTurn = 0;
-let playerNames = [];
 
 function preload(){
   soundFormats('mp3', 'ogg');
@@ -55,7 +52,7 @@ function preload(){
   tilePlaceSoundLow = loadSound("https://gist.githubusercontent.com/dlayres/374cd164b593e915790abe7624bc0151/raw/7d54bd034c4b89279597307ebdf78ee40b9f711a/tileClackLow.mp3");
   dictionaryHalf1 = loadStrings("https://gist.githubusercontent.com/dlayres/5919e00889614b854092b86d76d55815/raw/6025c962aaa62766140a9ea0bfadba9dd4d07e61/dictHalf1.txt");
   dictionaryHalf2 = loadStrings("https://gist.githubusercontent.com/dlayres/de5c600219a07c1dd3a1589293cdf3b4/raw/51af4ebfea0538b55f5f43cc8dd9a5863dcadf97/dictHalf2.txt");
-  firebaseAPIKey = loadStrings("https://raw.githubusercontent.com/dlayres/fire-gist/master/api.txt?token=AIQ7QVKY4VUET5BTYFHFXEC5PE43O",
+  firebaseAPIKey = loadStrings("https://gist.githubusercontent.com/dlayres/0bcadfe02a2eaf279679aedbb99014fa/raw/15860d00a8d05558aa00507fff1db850a1ba6490/fbapi.txt",
     () => {
       firebaseConfig = {
         apiKey: firebaseAPIKey[0],
@@ -74,12 +71,6 @@ function preload(){
 }
 
 function setup(){
-  numPlayers = prompt("Number of players");
-  for(let i = 0; i < numPlayers; i++){
-    userPoints.push(0);
-    playerNames.push(prompt("Player " + (i + 1)));
-  }
-
   createCanvas(windowWidth, windowHeight);
   dictionary = dictionaryHalf1.concat(dictionaryHalf2);
   submitWordButton = createButton("Submit Word");
@@ -232,7 +223,7 @@ function draw(){
   fill(0, 0, 0);
   noStroke();
   textSize(tileWidth / 2.5);
-  text(playerNames[playerTurn] + ": " + userPoints[playerTurn], submitWordButton.width + 35, windowHeight - 30);
+  text("Points: " + userPoints, submitWordButton.width + 35, windowHeight - 30);
 
   let numBoardTiles = 0;
   for(let i = 0; i < userTiles.length; i++){
@@ -720,7 +711,7 @@ function checkWord(){
         }
         successAlert += (wordList[wordList.length - 1][0].toUpperCase() + " played successfully.");
         totalPoints += wordList[wordList.length - 1][1];
-        userPoints[playerTurn] += totalPoints;
+        userPoints += totalPoints;
         commitWord(tileIndices);
         //sendAlert(successAlert);
         return;
@@ -802,7 +793,7 @@ function checkWord(){
         }
         successAlert += (wordList[wordList.length - 1][0].toUpperCase() + " played successfully.");
         totalPoints += wordList[wordList.length - 1][1];
-        userPoints[playerTurn] += totalPoints;
+        userPoints += totalPoints;
         commitWord(tileIndices);
         //sendAlert(successAlert);
         return;
@@ -1036,15 +1027,6 @@ function commitWord(indices){
   for(let i = 0; i < occupiedPositions.length; i++){
     committedPositions.push(occupiedPositions[i]);
   }
-
-  playerTurn++;
-  playerTurn = playerTurn % numPlayers;
-
-  console.log("-------------------------------------------");
-  for(let i = 0; i < numPlayers; i++){
-    console.log(playerNames[i] + ": " + userPoints[i]);
-  }
-  console.log("-------------------------------------------");
 }
 
 function shiftTiles(startingIndex, endingIndex){
