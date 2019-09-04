@@ -15,6 +15,9 @@ Pre-alpha v2:
 Pre-alpha v3:
 	Make the grid more scrabble-like, add one-time bonuses
 		(double word, double letter, triple word, triple letter)
+
+	ISSUES:
+		When recalling a blank tile with the Recall Tiles Button, letter stays, doesn't revert to blank
 	
 	
 	
