@@ -52,7 +52,7 @@ function preload(){
   tilePlaceSoundLow = loadSound("https://gist.githubusercontent.com/dlayres/374cd164b593e915790abe7624bc0151/raw/7d54bd034c4b89279597307ebdf78ee40b9f711a/tileClackLow.mp3");
   dictionaryHalf1 = loadStrings("https://gist.githubusercontent.com/dlayres/5919e00889614b854092b86d76d55815/raw/6025c962aaa62766140a9ea0bfadba9dd4d07e61/dictHalf1.txt");
   dictionaryHalf2 = loadStrings("https://gist.githubusercontent.com/dlayres/de5c600219a07c1dd3a1589293cdf3b4/raw/51af4ebfea0538b55f5f43cc8dd9a5863dcadf97/dictHalf2.txt");
-  firebaseAPIKey = loadStrings("https://raw.githubusercontent.com/dlayres/fire-gist/master/api.txt?token=AIQ7QVMARAGZT26BNCIHZWK5N3324",
+  firebaseAPIKey = loadStrings("https://raw.githubusercontent.com/dlayres/fire-gist/master/api.txt?token=AIQ7QVKY4VUET5BTYFHFXEC5PE43O",
     () => {
       firebaseConfig = {
         apiKey: firebaseAPIKey[0],
@@ -570,9 +570,6 @@ function shuffleTiles(){
       boardTiles.push(userTiles[i]);
     }
   }
-
-  console.log(boardTileIndices);
-
 
   for(let i = 0; i < numBoardTiles; i++){
     for(let j = maxTiles - 1; j >= 0; j--){
