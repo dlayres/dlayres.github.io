@@ -19,5 +19,5 @@ Pre-alpha v3:
 	ISSUES:
 		When recalling a blank tile with the Recall Tiles Button, letter stays, doesn't revert to blank
 	
-	
+		Getting a color doesn't work properly (especially if not exclusively when board is moved)
 	

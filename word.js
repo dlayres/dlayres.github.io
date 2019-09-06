@@ -1,6 +1,10 @@
 // Word dictionary from http://scrabutility.com/TWL06.txt
 // Split in half between two github gists
 
+p5.Color.prototype.equals = function(c){
+  return this.toString() == c.toString();
+}
+
 let dictionaryHalf1;
 let dictionaryHalf2;
 let dictionary;
@@ -167,7 +171,7 @@ function setup(){
 function draw(){
   background(220);
   drawGrid(userPos);
-  drawCoords(userPos);
+  drawBonuses(userPos);
 
   if(draggingTile){
     userTiles[draggingTileIndex].x = mouseX - dragOffsetX;
@@ -693,14 +697,15 @@ function checkWord(){
           let boardY = wordTiles[i].boardY;
           if(!wordTiles[i].committedToBoard){
             let color = getColor(boardX, boardY);
+            console.log(color);
             if(color.equals(tripleLetterColor)){
               possiblePoints += wordTiles[i].points * 3;
             }
             else if(color.equals(doubleLetterColor)){
               possiblePoints += wordTiles[i].points * 2;
             }
-            else{
-              possiblePoints += wordTiles[i].points;
+           else{
+             possiblePoints += wordTiles[i].points;
             }
           }
           else{
@@ -869,108 +874,181 @@ function drawGrid(pos){
   }
 }
 
-function drawCoords(pos){
-  textSize(20);
-  for(let i = pos.x; i < windowWidth; i+=gridSpacing){
-    for(let j = pos.y; j < windowHeight; j+=gridSpacing){
-      checkBonus(i, j, pos);
-    }
-    for(let j = pos.y - gridSpacing; j > -windowHeight; j-=gridSpacing){
-      checkBonus(i, j, pos);
-    }
+
+function drawBonuses(pos){
+  let x = pos.x % gridSpacing;
+  let y = pos.y % gridSpacing;
+
+  if(x > 0){
+    x -= gridSpacing;
   }
-  for(let i = pos.x - gridSpacing; i > -windowWidth; i-=gridSpacing){
-    for(let j = pos.y; j < windowHeight; j+=gridSpacing){
-      checkBonus(i, j, pos);
-    }
-    for(let j = pos.y - gridSpacing; j > -windowHeight; j-=gridSpacing){
-      checkBonus(i, j, pos);
+  if(y > 0){
+    y -= gridSpacing;
+  }
+
+  x -= gridSpacing;
+  y -= gridSpacing;
+
+  let tileX = (x - pos.x) / gridSpacing;
+  let tileY = (y - pos.y) / gridSpacing;
+
+  while(tileX % 14 != 0){
+    tileX -= 1;
+    x -= gridSpacing;
+  }
+  while(tileY % 14 != 0){
+    tileY -= 1;
+    y -= gridSpacing;
+  }
+
+  let spacing1 = gridSpacing;
+  let spacing2 = gridSpacing * 2;
+  let spacing3 = gridSpacing * 3;
+  let spacing4 = gridSpacing * 4;
+  let spacing5 = gridSpacing * 5;
+  let spacing6 = gridSpacing * 6;
+  let spacing7 = gridSpacing * 7;
+  let spacing8 = gridSpacing * 8;
+  let spacing9 = gridSpacing * 9;
+  let spacing10 = gridSpacing * 10;
+  let spacing11 = gridSpacing * 11;
+  let spacing12 = gridSpacing * 12;
+  let spacing13 = gridSpacing * 13;
+  let spacing14 = gridSpacing * 14;
+
+  for(let i = x; i < windowWidth * 2; i += spacing14){
+    for(let j = y; j < windowWidth * 2; j += spacing14){
+      fill(centerColor);
+      square(i, j, gridSpacing);
+
+      fill(tripleWordColor);
+      square(i + spacing7, j, gridSpacing);
+      square(i, j + spacing7, gridSpacing);
+      square(i + spacing7, j + spacing7, gridSpacing);
+
+      fill(tripleLetterColor);
+      square(i + spacing2, j + spacing2, gridSpacing);
+      square(i + spacing6, j + spacing2, gridSpacing);
+      square(i + spacing8, j + spacing2, gridSpacing);
+      square(i + spacing12, j + spacing2, gridSpacing);
+      square(i + spacing2, j + spacing6, gridSpacing);
+      square(i + spacing12, j + spacing6, gridSpacing);
+      square(i + spacing2, j + spacing8, gridSpacing);
+      square(i + spacing12, j + spacing8, gridSpacing);
+      square(i + spacing2, j + spacing12, gridSpacing);
+      square(i + spacing6, j + spacing12, gridSpacing);
+      square(i + spacing8, j + spacing12, gridSpacing);
+      square(i + spacing12, j + spacing12, gridSpacing);
+
+      fill(doubleWordColor);
+      square(i + spacing3, j + spacing3, gridSpacing);
+      square(i + spacing4, j + spacing4, gridSpacing);
+      square(i + spacing5, j + spacing5, gridSpacing);
+      square(i + spacing6, j + spacing6, gridSpacing);
+      square(i + spacing8, j + spacing8, gridSpacing);
+      square(i + spacing9, j + spacing9, gridSpacing);
+      square(i + spacing10, j + spacing10, gridSpacing);
+      square(i + spacing11, j + spacing11, gridSpacing);
+      square(i + spacing11, j + spacing3, gridSpacing);
+      square(i + spacing10, j + spacing4, gridSpacing);
+      square(i + spacing9, j + spacing5, gridSpacing);
+      square(i + spacing8, j + spacing6, gridSpacing);
+      square(i + spacing6, j + spacing8, gridSpacing);
+      square(i + spacing5, j + spacing9, gridSpacing);
+      square(i + spacing4, j + spacing10, gridSpacing);
+      square(i + spacing3, j + spacing11, gridSpacing);
+
+      fill(doubleLetterColor);
+      square(i + spacing4, j, gridSpacing);
+      square(i + spacing10, j, gridSpacing);
+      square(i + spacing1, j + spacing1, gridSpacing);
+      square(i + spacing5, j + spacing1, gridSpacing);
+      square(i + spacing9, j + spacing1, gridSpacing);
+      square(i + spacing13, j + spacing1, gridSpacing);
+      square(i, j + spacing4, gridSpacing);
+      square(i + spacing7, j + spacing4, gridSpacing);
+      square(i + spacing1, j + spacing5, gridSpacing);
+      square(i + spacing13, j + spacing5, gridSpacing);
+      square(i + spacing4, j + spacing7, gridSpacing);
+      square(i + spacing10, j + spacing7, gridSpacing);
+      square(i + spacing1, j + spacing9, gridSpacing);
+      square(i + spacing13, j + spacing9, gridSpacing);
+      square(i, j + spacing10, gridSpacing);
+      square(i + spacing7, j + spacing10, gridSpacing);
+      square(i + spacing1, j + spacing13, gridSpacing);
+      square(i + spacing5, j + spacing13, gridSpacing);
+      square(i + spacing9, j + spacing13, gridSpacing);
+      square(i + spacing13, j + spacing13, gridSpacing);
     }
   }
 }
 
-function checkBonus(x, y, pos){
-  let tileX = (x - pos.x) / gridSpacing;
-  let tileY = (y - pos.y) / gridSpacing;
+function getColor(x, y){
+  let color = emptyColor;
 
-  if(tileX % 14 == 0 && tileY % 14 == 0){
-    let spacing1 = gridSpacing;
-    let spacing2 = gridSpacing * 2;
-    let spacing3 = gridSpacing * 3;
-    let spacing4 = gridSpacing * 4;
-    let spacing5 = gridSpacing * 5;
-    let spacing6 = gridSpacing * 6;
-    let spacing7 = gridSpacing * 7;
-    let spacing8 = gridSpacing * 8;
-    let spacing9 = gridSpacing * 9;
-    let spacing10 = gridSpacing * 10;
-    let spacing11 = gridSpacing * 11;
-    let spacing12 = gridSpacing * 12;
-    let spacing13 = gridSpacing * 13;
-
-
-    fill(centerColor);
-    square(x, y, gridSpacing);
-
-    fill(tripleWordColor);
-    square(x + spacing7, y, gridSpacing);
-    square(x, y + spacing7, gridSpacing);
-    square(x + spacing7, y + spacing7, gridSpacing);
-
-    fill(tripleLetterColor);
-    square(x + spacing2, y + spacing2, gridSpacing);
-    square(x + spacing6, y + spacing2, gridSpacing);
-    square(x + spacing8, y + spacing2, gridSpacing);
-    square(x + spacing12, y + spacing2, gridSpacing);
-    square(x + spacing2, y + spacing6, gridSpacing);
-    square(x + spacing12, y + spacing6, gridSpacing);
-    square(x + spacing2, y + spacing8, gridSpacing);
-    square(x + spacing12, y + spacing8, gridSpacing);
-    square(x + spacing2, y + spacing12, gridSpacing);
-    square(x + spacing6, y + spacing12, gridSpacing);
-    square(x + spacing8, y + spacing12, gridSpacing);
-    square(x + spacing12, y + spacing12, gridSpacing);
-
-    fill(doubleWordColor);
-    square(x + spacing3, y + spacing3, gridSpacing);
-    square(x + spacing4, y + spacing4, gridSpacing);
-    square(x + spacing5, y + spacing5, gridSpacing);
-    square(x + spacing6, y + spacing6, gridSpacing);
-    square(x + spacing8, y + spacing8, gridSpacing);
-    square(x + spacing9, y + spacing9, gridSpacing);
-    square(x + spacing10, y + spacing10, gridSpacing);
-    square(x + spacing11, y + spacing11, gridSpacing);
-    square(x + spacing11, y + spacing3, gridSpacing);
-    square(x + spacing10, y + spacing4, gridSpacing);
-    square(x + spacing9, y + spacing5, gridSpacing);
-    square(x + spacing8, y + spacing6, gridSpacing);
-    square(x + spacing6, y + spacing8, gridSpacing);
-    square(x + spacing5, y + spacing9, gridSpacing);
-    square(x + spacing4, y + spacing10, gridSpacing);
-    square(x + spacing3, y + spacing11, gridSpacing);
-
-    fill(doubleLetterColor);
-    square(x + spacing4, y, gridSpacing);
-    square(x + spacing10, y, gridSpacing);
-    square(x + spacing1, y + spacing1, gridSpacing);
-    square(x + spacing5, y + spacing1, gridSpacing);
-    square(x + spacing9, y + spacing1, gridSpacing);
-    square(x + spacing13, y + spacing1, gridSpacing);
-    square(x, y + spacing4, gridSpacing);
-    square(x + spacing7, y + spacing4, gridSpacing);
-    square(x + spacing1, y + spacing5, gridSpacing);
-    square(x + spacing13, y + spacing5, gridSpacing);
-    square(x + spacing4, y + spacing7, gridSpacing);
-    square(x + spacing10, y + spacing7, gridSpacing);
-    square(x + spacing1, y + spacing9, gridSpacing);
-    square(x + spacing13, y + spacing9, gridSpacing);
-    square(x, y + spacing10, gridSpacing);
-    square(x + spacing7, y + spacing10, gridSpacing);
-    square(x + spacing1, y + spacing13, gridSpacing);
-    square(x + spacing5, y + spacing13, gridSpacing);
-    square(x + spacing9, y + spacing13, gridSpacing);
-    square(x + spacing13, y + spacing13, gridSpacing);
+  // Center spaces
+  if(x % 14 == 0 && y % 14 == 0){
+    color = centerColor;
+    return color;
   }
+
+  // Triple word scores
+  if(x % 7 == 0 && y % 7 == 0){
+    color = tripleWordColor;
+    return color;
+  }
+
+  // Triple letter scores
+  // (vertical)
+  if((x + 2) % 14 == 0 || (x - 2) % 14 == 0){
+    if((y + 2) % 14 == 0 || (y + 6) % 14 == 0 || (y - 2) % 14 == 0 || (y - 6) % 14 == 0){
+      color = tripleLetterColor;
+      return color;
+    }
+  }
+
+  // (horizontal)
+  if((x + 6) % 14 == 0 || (x - 6) % 14 == 0){
+    if((y + 2) % 14 == 0 || (y - 2) % 14 == 0){
+      color = tripleLetterColor;
+      return color;
+    }
+  }
+
+  // Double word scores
+  for(let i = 3; i <= 6; i++){
+    if((x + i) % 14 == 0 || (x - i) % 14 == 0){
+      if((y + i) % 14 == 0 || (y - i) % 14 == 0){
+        color = doubleWordColor;
+        return color;
+      }
+    }
+  }
+
+  // Double letter scores
+  if((x + 1) % 14 == 0 || (x - 1) % 14 == 0 || (x + 5) % 14 == 0 || (x - 5) % 14 == 0){
+    if((y + 1) % 14 == 0 || (y - 1) % 14 == 0 || (y + 5) % 14 == 0 || (y - 5) % 14 == 0){
+      color = doubleLetterColor;
+      return color;
+    }
+  }
+
+  if((x + 4) % 14 == 0 || (x - 4) % 14 == 0){
+    if(y % 14 == 0){
+      color = doubleLetterColor;
+      return color;
+    }
+  }
+
+  if(x % 14 == 0){
+    if((y + 4) % 14 == 0 || (y - 4) % 14 == 0){
+      color = doubleLetterColor;
+      return color;
+    }
+  }
+
+  // Non-bonus spaces
+  return color;
 }
 
 function getHorizontalAdjacencies(boardTiles, xPositions, yPositions){
