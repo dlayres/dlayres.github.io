@@ -96,12 +96,12 @@ function setup(){
 
   userPos = createVector(0, 0);
 
-  tripleWordColor = createVector(255, 0, 0);
-  tripleLetterColor = createVector(0, 0, 255);
-  doubleWordColor = createVector(255, 170, 170);
-  doubleLetterColor = createVector(170, 170, 255);
-  centerColor = createVector(255, 255, 50);
-  emptyColor = createVector(220, 220, 220);
+  tripleWordColor = color(255, 0, 0);
+  tripleLetterColor = color(0, 0, 255);
+  doubleWordColor = color(255, 170, 170);
+  doubleLetterColor = color(170, 170, 255);
+  centerColor = color(255, 255, 50);
+  emptyColor = color(220, 220, 220);
 
   // Tile letter distribution, blanks not yet implemented
   tilePossibilities = ["A", "A", "A", "A", "A", "A", "A", "A", "A", "B", "B", "C", "C", "D", "D", "D", "D", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E",
@@ -873,155 +873,104 @@ function drawCoords(pos){
   textSize(20);
   for(let i = pos.x; i < windowWidth; i+=gridSpacing){
     for(let j = pos.y; j < windowHeight; j+=gridSpacing){
-      let tileX = (i - pos.x) / gridSpacing;
-      let tileY = (j - pos.y) / gridSpacing;
-      let color = getColor(tileX, tileY);
-      fill(color.x, color.y, color.z);
-      rect(i, j, gridSpacing, gridSpacing);
-      displayBonus(i, j, color);
+      checkBonus(i, j, pos);
     }
     for(let j = pos.y - gridSpacing; j > -windowHeight; j-=gridSpacing){
-      let tileX = (i - pos.x) / gridSpacing;
-      let tileY = (j - pos.y) / gridSpacing;
-      let color = getColor(tileX, tileY);
-      fill(color.x, color.y, color.z);
-      rect(i, j, gridSpacing, gridSpacing);
-      displayBonus(i, j, color);
+      checkBonus(i, j, pos);
     }
   }
   for(let i = pos.x - gridSpacing; i > -windowWidth; i-=gridSpacing){
     for(let j = pos.y; j < windowHeight; j+=gridSpacing){
-      let tileX = (i - pos.x) / gridSpacing;
-      let tileY = (j - pos.y) / gridSpacing;
-      let color = getColor(tileX, tileY);
-      fill(color.x, color.y, color.z);
-      rect(i, j, gridSpacing, gridSpacing);
-      displayBonus(i, j, color);
+      checkBonus(i, j, pos);
     }
     for(let j = pos.y - gridSpacing; j > -windowHeight; j-=gridSpacing){
-      let tileX = (i - pos.x) / gridSpacing;
-      let tileY = (j - pos.y) / gridSpacing;
-      let color = getColor(tileX, tileY);
-      fill(color.x, color.y, color.z);
-      rect(i, j, gridSpacing, gridSpacing);
-      displayBonus(i, j, color);
+      checkBonus(i, j, pos);
     }
   }
 }
 
-function getColor(x, y){
-  let color = emptyColor;
+function checkBonus(x, y, pos){
+  let tileX = (x - pos.x) / gridSpacing;
+  let tileY = (y - pos.y) / gridSpacing;
 
-  // Center spaces
-  if(x % 14 == 0 && y % 14 == 0){
-    color = centerColor;
-    return color;
+  if(tileX % 14 == 0 && tileY % 14 == 0){
+    let spacing1 = gridSpacing;
+    let spacing2 = gridSpacing * 2;
+    let spacing3 = gridSpacing * 3;
+    let spacing4 = gridSpacing * 4;
+    let spacing5 = gridSpacing * 5;
+    let spacing6 = gridSpacing * 6;
+    let spacing7 = gridSpacing * 7;
+    let spacing8 = gridSpacing * 8;
+    let spacing9 = gridSpacing * 9;
+    let spacing10 = gridSpacing * 10;
+    let spacing11 = gridSpacing * 11;
+    let spacing12 = gridSpacing * 12;
+    let spacing13 = gridSpacing * 13;
+
+
+    fill(centerColor);
+    square(x, y, gridSpacing);
+
+    fill(tripleWordColor);
+    square(x + spacing7, y, gridSpacing);
+    square(x, y + spacing7, gridSpacing);
+    square(x + spacing7, y + spacing7, gridSpacing);
+
+    fill(tripleLetterColor);
+    square(x + spacing2, y + spacing2, gridSpacing);
+    square(x + spacing6, y + spacing2, gridSpacing);
+    square(x + spacing8, y + spacing2, gridSpacing);
+    square(x + spacing12, y + spacing2, gridSpacing);
+    square(x + spacing2, y + spacing6, gridSpacing);
+    square(x + spacing12, y + spacing6, gridSpacing);
+    square(x + spacing2, y + spacing8, gridSpacing);
+    square(x + spacing12, y + spacing8, gridSpacing);
+    square(x + spacing2, y + spacing12, gridSpacing);
+    square(x + spacing6, y + spacing12, gridSpacing);
+    square(x + spacing8, y + spacing12, gridSpacing);
+    square(x + spacing12, y + spacing12, gridSpacing);
+
+    fill(doubleWordColor);
+    square(x + spacing3, y + spacing3, gridSpacing);
+    square(x + spacing4, y + spacing4, gridSpacing);
+    square(x + spacing5, y + spacing5, gridSpacing);
+    square(x + spacing6, y + spacing6, gridSpacing);
+    square(x + spacing8, y + spacing8, gridSpacing);
+    square(x + spacing9, y + spacing9, gridSpacing);
+    square(x + spacing10, y + spacing10, gridSpacing);
+    square(x + spacing11, y + spacing11, gridSpacing);
+    square(x + spacing11, y + spacing3, gridSpacing);
+    square(x + spacing10, y + spacing4, gridSpacing);
+    square(x + spacing9, y + spacing5, gridSpacing);
+    square(x + spacing8, y + spacing6, gridSpacing);
+    square(x + spacing6, y + spacing8, gridSpacing);
+    square(x + spacing5, y + spacing9, gridSpacing);
+    square(x + spacing4, y + spacing10, gridSpacing);
+    square(x + spacing3, y + spacing11, gridSpacing);
+
+    fill(doubleLetterColor);
+    square(x + spacing4, y, gridSpacing);
+    square(x + spacing10, y, gridSpacing);
+    square(x + spacing1, y + spacing1, gridSpacing);
+    square(x + spacing5, y + spacing1, gridSpacing);
+    square(x + spacing9, y + spacing1, gridSpacing);
+    square(x + spacing13, y + spacing1, gridSpacing);
+    square(x, y + spacing4, gridSpacing);
+    square(x + spacing7, y + spacing4, gridSpacing);
+    square(x + spacing1, y + spacing5, gridSpacing);
+    square(x + spacing13, y + spacing5, gridSpacing);
+    square(x + spacing4, y + spacing7, gridSpacing);
+    square(x + spacing10, y + spacing7, gridSpacing);
+    square(x + spacing1, y + spacing9, gridSpacing);
+    square(x + spacing13, y + spacing9, gridSpacing);
+    square(x, y + spacing10, gridSpacing);
+    square(x + spacing7, y + spacing10, gridSpacing);
+    square(x + spacing1, y + spacing13, gridSpacing);
+    square(x + spacing5, y + spacing13, gridSpacing);
+    square(x + spacing9, y + spacing13, gridSpacing);
+    square(x + spacing13, y + spacing13, gridSpacing);
   }
-
-  // Triple word scores
-  if(x % 7 == 0 && y % 7 == 0){
-    color = tripleWordColor;
-    return color;
-  }
-
-  // Triple letter scores
-  // (vertical)
-  if((x + 2) % 14 == 0 || (x - 2) % 14 == 0){
-    if((y + 2) % 14 == 0 || (y + 6) % 14 == 0 || (y - 2) % 14 == 0 || (y - 6) % 14 == 0){
-      color = tripleLetterColor;
-      return color;
-    }
-  }
-
-  // (horizontal)
-  if((x + 6) % 14 == 0 || (x - 6) % 14 == 0){
-    if((y + 2) % 14 == 0 || (y - 2) % 14 == 0){
-      color = tripleLetterColor;
-      return color;
-    }
-  }
-
-  // Double word scores
-  for(let i = 3; i <= 6; i++){
-    if((x + i) % 14 == 0 || (x - i) % 14 == 0){
-      if((y + i) % 14 == 0 || (y - i) % 14 == 0){
-        color = doubleWordColor;
-        return color;
-      }
-    }
-  }
-
-  // Double letter scores
-  if((x + 1) % 14 == 0 || (x - 1) % 14 == 0 || (x + 5) % 14 == 0 || (x - 5) % 14 == 0){
-    if((y + 1) % 14 == 0 || (y - 1) % 14 == 0 || (y + 5) % 14 == 0 || (y - 5) % 14 == 0){
-      color = doubleLetterColor;
-      return color;
-    }
-  }
-
-  if((x + 4) % 14 == 0 || (x - 4) % 14 == 0){
-    if(y % 14 == 0){
-      color = doubleLetterColor;
-      return color;
-    }
-  }
-
-  if(x % 14 == 0){
-    if((y + 4) % 14 == 0 || (y - 4) % 14 == 0){
-      color = doubleLetterColor;
-      return color;
-    }
-  }
-
-  // Non-bonus spaces
-  return color;
-}
-
-function displayBonus(x, y, color){
-  noStroke();
-  let displayTextSize = 15;
-  textSize(displayTextSize);
-  fill(255, 255, 255);
-
-  let triple = "Triple";
-  let double = "Double";
-  let word = "Word";
-  let letter = "Letter";
-  let score = "Score";
-
-  let tripleW = textWidth(triple);
-  let doubleW = textWidth(double);
-  let wordW = textWidth(word);
-  let letterW = textWidth(letter);
-  let scoreW = textWidth(score);
-
-  let tripleBegin = (gridSpacing - tripleW) / 2;
-  let doubleBegin = (gridSpacing - doubleW) / 2;
-  let wordBegin = (gridSpacing - wordW) / 2;
-  let letterBegin = (gridSpacing - letterW) / 2;
-  let scoreBegin = (gridSpacing - scoreW) / 2;
-/*
-  if(color.equals(tripleWordColor)){
-    text(triple, x + tripleBegin, y + displayTextSize + 5);
-    text(word, x + wordBegin, y + displayTextSize * 2 + 5);
-    text(score, x + scoreBegin, y + displayTextSize * 3 + 5);
-  }
-  else if(color.equals(tripleLetterColor)){
-    text(triple, x + tripleBegin, y + displayTextSize + 5);
-    text(letter, x + letterBegin, y + displayTextSize * 2 + 5);
-    text(score, x + scoreBegin, y + displayTextSize * 3 + 5);
-  }
-  else if(color.equals(doubleWordColor)){
-    text(double, x + doubleBegin, y + displayTextSize + 5);
-    text(word, x + wordBegin, y + displayTextSize * 2 + 5);
-    text(score, x + scoreBegin, y + displayTextSize * 3 + 5);
-  }
-  else if(color.equals(doubleLetterColor)){
-    text(double, x + doubleBegin, y + displayTextSize + 5);
-    text(letter, x + letterBegin, y + displayTextSize * 2 + 5);
-    text(score, x + scoreBegin, y + displayTextSize * 3 + 5);
-  }*/
-  stroke(0, 0, 0);
 }
 
 function getHorizontalAdjacencies(boardTiles, xPositions, yPositions){
