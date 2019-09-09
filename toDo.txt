@@ -17,7 +17,7 @@ Pre-alpha v3:
 		(double word, double letter, triple word, triple letter)
 
 	ISSUES:
-		When recalling a blank tile with the Recall Tiles Button, letter stays, doesn't revert to blank
+		Double, triple word scores do not work properly
 	
-		Getting a color doesn't work properly (especially if not exclusively when board is moved)
-	
+	NOTES:
+		Remember to add 50 points to score if player uses all tiles on single turn 

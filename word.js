@@ -557,6 +557,10 @@ function recallTiles(){
       userTiles[i].y = tileRestingPositions[i].y;
       userTiles[i].onBoard = false;
 
+      if(userTiles[i].points == 0){
+        userTiles[i].letter = "BL";
+      }
+
       tileBoardX = userTiles[i].boardX;
       tileBoardY = userTiles[i].boardY;
 
@@ -691,26 +695,34 @@ function checkWord(){
         wordTiles.sort((a, b) => (a.x > b.x) ? 1 : -1);
         let word = "";
         let possiblePoints = 0;
+        let pointMultiplier = 1;
         for(let i = 0; i < wordTiles.length; i++){
           word += wordTiles[i].letter;
           let boardX = wordTiles[i].boardX;
           let boardY = wordTiles[i].boardY;
           if(!wordTiles[i].committedToBoard){
             let color = getColor(boardX, boardY);
-            console.log(color);
             if(color.equals(tripleLetterColor)){
               possiblePoints += wordTiles[i].points * 3;
             }
             else if(color.equals(doubleLetterColor)){
               possiblePoints += wordTiles[i].points * 2;
             }
-           else{
-             possiblePoints += wordTiles[i].points;
+            else{
+              possiblePoints += wordTiles[i].points;
+            }
+
+            if(color.equals(tripleWordColor)){
+              pointMultiplier *= 3;
+            }
+            else if(color.equals(doubleWordColor)){
+              pointMultiplier *= 2;
             }
           }
           else{
             possiblePoints += wordTiles[i].points;
           }
+          possiblePoints *= pointMultiplier;
         }
         wordList.push([word, possiblePoints]);
 
@@ -725,7 +737,23 @@ function checkWord(){
             let possiblePoints = 0;
             for(let j = 0; j < tileAdjacencies.length; j++){
               verticalWord += tileAdjacencies[j].letter;
-              possiblePoints += tileAdjacencies[j].points;
+              if(!tileAdjacencies[j].committedToBoard){
+                let boardX = tileAdjacencies[j].boardX;
+                let boardY = tileAdjacencies[j].boardY;
+                let color = getColor(boardX, boardY);
+                if(color.equals(tripleLetterColor)){
+                  possiblePoints += wordTiles[i].points * 3;
+                }
+                else if(color.equals(doubleLetterColor)){
+                  possiblePoints += wordTiles[i].points * 2;
+                }
+               else{
+                 possiblePoints += wordTiles[i].points;
+                }
+              }
+              else{
+                possiblePoints += tileAdjacencies[j].points;
+              }
             }
             wordList.push([verticalWord, possiblePoints]);
           }
@@ -872,6 +900,42 @@ function drawGrid(pos){
   for(let j = pos.y - gridSpacing; j > -windowHeight; j-=gridSpacing){
     line(0, j, windowWidth, j);
   }
+
+  //drawCoordText(pos);
+}
+
+function drawCoordText(pos){
+  strokeWeight(2.5);
+  fill(255, 255, 255);
+  for(let i = pos.x; i < windowWidth; i+=gridSpacing){
+    for(let j = pos.y; j < windowHeight; j+=gridSpacing){
+      let tileX = (i - pos.x) / gridSpacing;
+      let tileY = (j - pos.y) / gridSpacing;
+      text(tileX, i + 10, j + 30);
+      text(tileY, i + 30, j + 30);
+    }
+    for(let j = pos.y - gridSpacing; j > -windowHeight; j-=gridSpacing){
+      let tileX = (i - pos.x) / gridSpacing;
+      let tileY = (j - pos.y) / gridSpacing;
+      text(tileX, i + 10, j + 30);
+      text(tileY, i + 30, j + 30);
+    }
+  }
+  for(let i = pos.x - gridSpacing; i > -windowWidth; i-=gridSpacing){
+    for(let j = pos.y; j < windowHeight; j+=gridSpacing){
+      let tileX = (i - pos.x) / gridSpacing;
+      let tileY = (j - pos.y) / gridSpacing;
+      text(tileX, i + 10, j + 30);
+      text(tileY, i + 30, j + 30);
+    }
+    for(let j = pos.y - gridSpacing; j > -windowHeight; j-=gridSpacing){
+      let tileX = (i - pos.x) / gridSpacing;
+      let tileY = (j - pos.y) / gridSpacing;
+      text(tileX, i + 10, j + 30);
+      text(tileY, i + 30, j + 30);
+    }
+  }
+  strokeWeight(gridSpacing * scrollFactor);
 }
 
 
@@ -1027,7 +1091,28 @@ function getColor(x, y){
 
   // Double letter scores
   if((x + 1) % 14 == 0 || (x - 1) % 14 == 0 || (x + 5) % 14 == 0 || (x - 5) % 14 == 0){
-    if((y + 1) % 14 == 0 || (y - 1) % 14 == 0 || (y + 5) % 14 == 0 || (y - 5) % 14 == 0){
+    if((y + 1) % 14 == 0 || (y - 1) % 14 == 0){
+      color = doubleLetterColor;
+      return color;
+    }
+  }
+
+  if((x + 1) % 14 == 0 || (x - 1) % 14 == 0){
+    if((y + 5) % 14 == 0 || (y - 5) % 14 == 0){
+      color = doubleLetterColor;
+      return color;
+    }
+  }
+
+  if((x + 4) % 14 == 0 || (x - 4) % 14 == 0){
+    if((y + 7) % 14 == 0 || (y - 7) % 14 == 0){
+      color = doubleLetterColor;
+      return color;
+    }
+  }
+
+  if((x + 7) % 14 == 0 || (x - 7) % 14 == 0){
+    if((y + 4) % 14 == 0 || (y - 4) % 14 == 0){
       color = doubleLetterColor;
       return color;
     }
