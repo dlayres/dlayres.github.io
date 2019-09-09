@@ -13,11 +13,3 @@ Pre-alpha v2:
 		Occasional weird things happen when reordering tiles (need reproducible cases)
 
 Pre-alpha v3:
-	Make the grid more scrabble-like, add one-time bonuses
-		(double word, double letter, triple word, triple letter)
-
-	ISSUES:
-		Double, triple word scores do not work properly
-	
-	NOTES:
-		Remember to add 50 points to score if player uses all tiles on single turn 

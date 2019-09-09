@@ -12,26 +12,32 @@ class Tile{
   }
 
   drawTile(){
+    let unplayedColor = color(214, 195, 152);
+    let unplayedBlankColor = color(232, 216, 179);
+    let playedColor = color(158, 128, 57);
+    let playedBlankColor = color(184, 155, 86);
+
     if(this.committedToBoard){
       if(this.points == 0){
-        fill(75, 75, 255);
+        fill(playedBlankColor);
       }
       else{
-        fill(0, 0, 255);
+        fill(playedColor);
       }
     }
     else{
       if(this.points == 0){
-        fill(255, 75, 75);
+        fill(unplayedBlankColor);
       }
       else{
-        fill(255, 0, 0);
+        fill(unplayedColor);
       }
     }
     stroke(0, 0, 0);
     strokeWeight(2)
     square(this.x, this.y, this.width);
-    fill(255, 255, 255);
+
+    fill(0, 0, 0);
     noStroke();
     if(this.letter != "BL"){
       textSize(this.width / 1.25);
