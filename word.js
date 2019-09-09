@@ -582,9 +582,14 @@ function recallTiles(){
 }
 
 function shuffleTiles(){
+  // Sends empty spaces to the end
   let numBoardTiles = 0;
+  let numBlankTiles = 0;
   let boardTileIndices = [];
   let boardTiles = [];
+  let blankTileIndices = [];
+  let blankTiles = [];
+
   for(let i = 0; i < userTiles.length; i++){
     if(userTiles[i].onBoard){
       numBoardTiles++;
@@ -607,8 +612,30 @@ function shuffleTiles(){
     }
   }
 
+  for(let i = 0; i < userTiles.length; i++){
+    if(userTiles[i].points == 0 && !userTiles[i].onBoard){
+      numBlankTiles++;
+      blankTileIndices.push(i);
+      blankTiles.push(userTiles[i]);
+    }
+  }
+
+  for(let i = 0; i < numBlankTiles; i++){
+    for(let j = maxTiles - numBoardTiles - 1; j >= 0; j--){
+      if(j == blankTileIndices[i]){
+        break;
+      }
+      if(userTiles[j].points != 0){
+        let tempTile = userTiles[blankTileIndices[i]];
+        userTiles[blankTileIndices[i]] = userTiles[j];
+        userTiles[j] = tempTile;
+        break;
+      }
+    }
+  }
+
   let tempTiles = [];
-  for(let i = 0; i < userTiles.length - numBoardTiles; i++){
+  for(let i = 0; i < userTiles.length - numBoardTiles - numBlankTiles; i++){
     tempTiles.push(userTiles[i]);
   }
 
@@ -621,6 +648,9 @@ function shuffleTiles(){
     userTiles.push(tempTiles[i]);
     userTiles[i].x = tileRestingPositions[i].x;
     userTiles[i].y = tileRestingPositions[i].y;
+  }
+  for(let i = 0; i < blankTiles.length; i++){
+    userTiles.push(blankTiles[i]);
   }
   for(let i = 0; i < boardTiles.length; i++){
     userTiles.push(boardTiles[i]);

@@ -13,3 +13,4 @@ Pre-alpha v2:
 		Occasional weird things happen when reordering tiles (need reproducible cases)
 
 Pre-alpha v3:
+	Make the grid more scrabble-like, add one-time bonuses (v)
