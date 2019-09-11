@@ -72,5 +72,16 @@ function windowResized(){
 }
 
 function createAccount(){
-  console.log(grecaptcha.getResponse());
+  let captchaResponse = grecaptcha.getResponse();
+  let captchaSecret = "6LeA8rcUAAAAAK2zIKMf0LzS9YTzE-3ohzHztkQW";
+  let verifyURL = "https://www.google.com/recaptcha/api/siteverify";
+
+  let postData = {
+    secret: captchaSecret,
+    response: captchaResponse
+  }
+
+  httpPost(verifyURL, "json", postData, function(response){
+    console.log(response);
+  })
 }
