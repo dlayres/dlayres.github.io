@@ -55,6 +55,8 @@ let doubleWordColor;
 let doubleLetterColor;
 let centerColor;
 let emptyColor;
+let signInLink;
+let createAccountLink;
 
 function preload(){
   soundFormats('mp3', 'ogg');
@@ -97,6 +99,12 @@ function setup(){
   submitBlankButton.mousePressed(submitBlank)
   tilePlaceSound.setVolume(1);
   tilePlaceSoundLow.setVolume(1);
+
+  signInLink = createA("mew.html", "Sign in");
+  createAccountLink = createA("mew2.html", "create an account");
+  signInLink.position(100, 100);
+  createAccountLink.position(200, 200);
+  signInLink.style("background-color", "#ff0000") ;
 
   userPos = createVector(0, 0);
 
@@ -233,6 +241,11 @@ function draw(){
   fill(255, 255, 255);
   circle(userPos.x, userPos.y, 10);
   rect(0, windowHeight - bottomPanelHeight, windowWidth, windowHeight - bottomPanelHeight);
+  rect(0, 0, 300, 30);
+  fill(0, 0, 0);
+  textSize(16);
+  noStroke();
+  text("Sign in or create an account", 45, 20);
 
   for(let i = 0; i < tileRestingPositions.length; i++){
     rect(tileRestingPositions[i].x, tileRestingPositions[i].y, tileWidth, tileWidth);
