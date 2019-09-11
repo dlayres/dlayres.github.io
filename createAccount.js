@@ -3,6 +3,7 @@ let firebaseAPIKey;
 let emailInput;
 let passwordInput;
 let passwordConfirmInput;
+let createAccountButton;
 
 function preload(){
   firebaseAPIKey = loadStrings("https://gist.githubusercontent.com/dlayres/0bcadfe02a2eaf279679aedbb99014fa/raw/15860d00a8d05558aa00507fff1db850a1ba6490/fbapi.txt",
@@ -25,6 +26,20 @@ function preload(){
 function setup(){
   createCanvas(windowWidth, windowHeight);
 
+  emailInput = createInput("E-mail Address");
+  emailInput.position(20, 20);
+  passwordInput = createInput("Password");
+  passwordInput.position(20, 60);
+  passwordConfirmInput = createInput("Confirm Password");
+  passwordConfirmInput.position(20, 100);
+
+  let captchaContainer = select("#captcha");
+  captchaContainer.position(20, 150);
+
+  createAccountButton = createButton("Create Account");
+  createAccountButton.position(20, 280);
+  createAccountButton.mousePressed(createAccount);
+
   /*
   // Get preexisting tiles from database
   database.collection("tiles").get().then((query) => {
@@ -46,7 +61,7 @@ function setup(){
 }
 
 function draw(){
-  background(220);
+  background(255);
   noLoop();
 
 }
@@ -54,4 +69,8 @@ function draw(){
 function windowResized(){
   resizeCanvas(windowWidth, windowHeight);
 
+}
+
+function createAccount(){
+  console.log(grecaptcha.getResponse());
 }
