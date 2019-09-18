@@ -37,6 +37,10 @@ let restingY;
 let bottomPanelHeight = 75;
 let database;
 let alertImg;
+let tilePointImgs = [];
+let tileBlankImgs = [];
+let blankTileImg;
+let mainImgUrl = "https://gist.githubusercontent.com/dlayres/010ff55650af76fcb92005a76d2bc702/raw/2cd3d306b20dbcaf9b319eb5178385004b691fd4/";
 let alertOpacity = 0;
 let displayAlert;
 let defaultAlertHoldTimer = 250;
@@ -80,6 +84,14 @@ function preload(){
     }
   );
   alertImg = loadImage("https://gist.githubusercontent.com/dlayres/c71fafd0b454a46cccc2543fc6ee5163/raw/c701f7a490436b84f34166414eed2591cedae3c3/alert.png");
+
+  for(let i = 0; i < 26; i++){
+    let char = String.fromCharCode(i + 65);
+    let newPointURL = mainImgUrl + char + ".png";
+    let newBlankURL = mainImgUrl + char + "blank.png";
+    tilePointImgs[i] = loadImage(newPointURL);
+    tileBlankImgs[i] = loadImage(newBlankURL);
+  }
 }
 
 function setup(){
@@ -236,7 +248,13 @@ function draw(){
   }
 
   for(let i = 0; i < allTiles.length; i++){
-    allTiles[i].drawTile();
+    let letterNum = allTiles[i].letter.charCodeAt() - 65;
+    if(allTiles[i].points != 0){
+      allTiles[i].drawTile(tilePointImgs[letterNum]);
+    }
+    else{
+      allTiles[i].drawTile(tileBlankImgs[letterNum]);
+    }
   }
 
   strokeWeight(2);
@@ -250,6 +268,8 @@ function draw(){
   noStroke();
   text("or", 99, 20);
 
+  fill(255, 255, 255);
+  stroke(0, 0, 0);
   for(let i = 0; i < tileRestingPositions.length; i++){
     rect(tileRestingPositions[i].x, tileRestingPositions[i].y, tileWidth, tileWidth);
   }
@@ -264,7 +284,13 @@ function draw(){
     if(!userTiles[i].onBoard && i != draggingTileIndex){
       userTiles[i].x = tileRestingPositions[i].x;
       userTiles[i].y = tileRestingPositions[i].y;
-      userTiles[i].drawTile();
+      let letterNum = userTiles[i].letter.charCodeAt() - 65;
+      if(userTiles[i].points != 0){
+        userTiles[i].drawTile(tilePointImgs[letterNum]);
+      }
+      else{
+        userTiles[i].drawTile(tileBlankImgs[letterNum]);
+      }
     }
     if(userTiles[i].onBoard){
       numBoardTiles++;
@@ -272,7 +298,13 @@ function draw(){
   }
 
   if(draggingTile){
-    userTiles[draggingTileIndex].drawTile();
+    let letterNum = userTiles[draggingTileIndex].letter.charCodeAt() - 65;
+    if(userTiles[draggingTileIndex].points != 0){
+      userTiles[draggingTileIndex].drawTile(tilePointImgs[letterNum]);
+    }
+    else{
+      userTiles[draggingTileIndex].drawTile(tileBlankImgs[letterNum]);
+    }
   }
 
   if(displayAlert == "inc" || displayAlert == "dec" || displayAlert == "const"){

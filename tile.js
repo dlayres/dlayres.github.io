@@ -11,7 +11,7 @@ class Tile{
     this.points = points;
   }
 
-  drawTile(){
+  drawTile(img){
     let unplayedColor = color(214, 195, 152);
     let unplayedBlankColor = color(232, 216, 179);
     let playedColor = color(158, 128, 57);
@@ -35,7 +35,7 @@ class Tile{
     }
     stroke(0, 0, 0);
     strokeWeight(2)
-    square(this.x, this.y, this.width);
+  //  square(this.x, this.y, this.width);
 
     fill(0, 0, 0);
     noStroke();
@@ -43,11 +43,13 @@ class Tile{
       textSize(this.width / 1.25);
       let letterWidth = textWidth(this.letter);
       let textBeginHorizontal = ((this.width - letterWidth) / 2);
-      text(this.letter, this.x + textBeginHorizontal, this.y + this.width / 1.25);
+    //  text(this.letter, this.x + textBeginHorizontal, this.y + this.width / 1.25);
     }
     if(this.points != 0){
       textSize(this.width / 4.5);
-      text(this.points, this.x + this.width - 2 - textWidth(this.points.toString()), this.y + this.width - 4);
+  //    text(this.points, this.x + this.width - 2 - textWidth(this.points.toString()), this.y + this.width - 4);
     }
+
+    image(img, this.x + 1, this.y + 1, this.width - 2, this.width - 2);
   }
 }
